@@ -7,6 +7,28 @@ const botaoLimpar = document.getElementById("botao-limpar");
 const listaVagas = document.getElementById("lista-vagas");
 const mensagemVazio = document.getElementById("mensagem-vazio");
 const contador = document.getElementById("contador");
+const selectOrdenar = document.getElementById("ordenar");
+const caixaPalavras = document.getElementById("perfil-palavras");
+const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
+const avisoPerfil = document.getElementById("aviso-perfil");
+const estadoPerfil = document.getElementById("perfil-estado");
+const caixasPerfil = {
+  areas: document.getElementById("perfil-areas"),
+  cidades: document.getElementById("perfil-cidades"),
+  tipos: document.getElementById("perfil-tipos")
+};
+
+// O localStorage pode estar bloqueado pelo navegador: nesse caso o perfil só vale nesta visita
+function obterArmazenamento() {
+  try {
+    return window.localStorage || null;
+  } catch (erro) {
+    return null;
+  }
+}
+const armazenamento = obterArmazenamento();
+let perfil = lerPerfil(armazenamento);  // regras.js: nunca dá erro, devolve perfil vazio se algo falhar
+let modoOrdem = "relevancia";
 
 // Transforma "2026-09-29" em "29/09/2026"
 function formatarData(dataIso) {
@@ -35,18 +57,22 @@ function linkSeguro(link) {
   return typeof link === "string" && /^https?:\/\//i.test(link);
 }
 
-// Cria as opções de um filtro (área, cidade ou fonte) a partir das vagas ativas, sem repetir
-function preencherOpcoes(select, campo) {
+// Valores de um campo (área, cidade, tipo ou fonte) nas vagas ativas, sem repetir e em ordem alfabética
+function valoresUnicos(campo) {
   const valores = [];
   vagasAtivas.forEach(function (vaga) {
     if (!valores.includes(vaga[campo])) {
       valores.push(vaga[campo]);
     }
   });
-  valores.sort(function (a, b) {
+  return valores.sort(function (a, b) {
     return a.localeCompare(b, "pt-BR");
   });
-  valores.forEach(function (valor) {
+}
+
+// Cria as opções de um filtro (área, cidade ou fonte) a partir das vagas ativas, sem repetir
+function preencherOpcoes(select, campo) {
+  valoresUnicos(campo).forEach(function (valor) {
     const opcao = document.createElement("option");
     opcao.textContent = valor;
     select.appendChild(opcao);
@@ -147,12 +173,19 @@ function criarBlocoEmail(vaga) {
   return bloco;
 }
 
-// Monta o cartão de uma vaga
-function criarCartao(vaga) {
+// Monta o cartão de uma vaga ("combina" = true mostra o selo "Combina com você")
+function criarCartao(vaga, combina) {
   const cartao = criar("article", "vaga");
 
-  if (vaga.exemplo) {
-    cartao.appendChild(criar("span", "selo-exemplo", "EXEMPLO"));
+  if (vaga.exemplo || combina) {
+    const selos = criar("div", "selos");
+    if (vaga.exemplo) {
+      selos.appendChild(criar("span", "selo-exemplo", "EXEMPLO"));
+    }
+    if (combina) {
+      selos.appendChild(criar("span", "selo-combina", "Combina com você"));
+    }
+    cartao.appendChild(selos);
   }
 
   cartao.appendChild(criar("h2", "", vaga.titulo));
@@ -207,14 +240,12 @@ function mostrarVagas() {
     return passaArea && passaCidade && passaFonte;
   });
 
-  // Mais recentes primeiro (datas ISO podem ser comparadas como texto)
-  filtradas.sort(function (a, b) {
-    return b.dataPublicacao.localeCompare(a.dataPublicacao);
-  });
+  // Ordem escolhida (relevância, mais recentes ou prazo). Sem perfil preenchido, relevância = mais recentes.
+  const ordenadas = ordenarVagas(filtradas, modoOrdem, perfil);
 
   listaVagas.replaceChildren();
-  filtradas.forEach(function (vaga) {
-    listaVagas.appendChild(criarCartao(vaga));
+  ordenadas.forEach(function (vaga) {
+    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil)));
   });
 
   // Mensagem diferente se não há nenhuma vaga cadastrada ou se só os filtros esvaziaram a lista
@@ -225,6 +256,62 @@ function mostrarVagas() {
   }
   mensagemVazio.hidden = filtradas.length > 0;
   contador.textContent = filtradas.length + " de " + vagasAtivas.length + " vagas";
+}
+
+// ===== Meu perfil =====
+
+// Cria as caixinhas de marcar de um grupo (áreas, cidades ou tipos), já marcadas conforme o perfil salvo
+function criarOpcoesPerfil(campoPerfil, campoVaga) {
+  const caixa = caixasPerfil[campoPerfil];
+  valoresUnicos(campoVaga).forEach(function (valor) {
+    const rotulo = document.createElement("label");
+    rotulo.className = "opcao";
+    const marcador = document.createElement("input");
+    marcador.type = "checkbox";
+    marcador.value = valor;
+    marcador.checked = perfil[campoPerfil].some(function (item) {
+      return normalizarTexto(item) === normalizarTexto(valor);
+    });
+    const texto = document.createElement("span");
+    texto.textContent = valor;
+    rotulo.append(marcador, texto);
+    caixa.appendChild(rotulo);
+  });
+}
+
+// Monta o perfil a partir do que está marcado e escrito na tela
+function lerPerfilDaTela() {
+  const novo = novoPerfil();
+  Object.keys(caixasPerfil).forEach(function (campo) {
+    caixasPerfil[campo].querySelectorAll("input:checked").forEach(function (marcador) {
+      novo[campo].push(marcador.value);
+    });
+  });
+  novo.palavras = caixaPalavras.value;
+  return sanitizarPerfil(novo);
+}
+
+// Texto ao lado de "Meu perfil": mostra se o perfil está ativo
+function mostrarEstadoPerfil() {
+  estadoPerfil.textContent = perfilVazio(perfil) ? "· defina o que você procura" : "· ativo";
+}
+
+// Chamado a cada mudança no perfil: guarda (se o navegador deixar) e redesenha a lista
+function aoMudarPerfil() {
+  perfil = lerPerfilDaTela();
+  avisoPerfil.hidden = salvarPerfil(armazenamento, perfil);
+  mostrarEstadoPerfil();
+  mostrarVagas();
+}
+
+function limparPerfil() {
+  Object.keys(caixasPerfil).forEach(function (campo) {
+    caixasPerfil[campo].querySelectorAll("input").forEach(function (marcador) {
+      marcador.checked = false;
+    });
+  });
+  caixaPalavras.value = "";
+  aoMudarPerfil();
 }
 
 function limparFiltros() {
@@ -238,8 +325,23 @@ selectArea.addEventListener("change", mostrarVagas);
 selectCidade.addEventListener("change", mostrarVagas);
 selectFonte.addEventListener("change", mostrarVagas);
 botaoLimpar.addEventListener("click", limparFiltros);
+selectOrdenar.addEventListener("change", function () {
+  modoOrdem = selectOrdenar.value;
+  mostrarVagas();
+});
+Object.keys(caixasPerfil).forEach(function (campo) {
+  caixasPerfil[campo].addEventListener("change", aoMudarPerfil);
+});
+caixaPalavras.addEventListener("input", aoMudarPerfil);
+botaoLimparPerfil.addEventListener("click", limparPerfil);
 
 preencherOpcoes(selectArea, "area");
 preencherOpcoes(selectCidade, "cidade");
 preencherOpcoes(selectFonte, "fonte");
+criarOpcoesPerfil("areas", "area");
+criarOpcoesPerfil("cidades", "cidade");
+criarOpcoesPerfil("tipos", "tipoEmpresa");
+caixaPalavras.value = perfil.palavras;
+avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada
+mostrarEstadoPerfil();
 mostrarVagas();

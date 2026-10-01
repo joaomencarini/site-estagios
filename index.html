@@ -13,6 +13,40 @@
   </header>
 
   <main>
+    <!-- Meu perfil: o JavaScript monta as opções com as áreas, cidades e tipos que existem nas vagas -->
+    <details class="perfil" id="perfil">
+      <summary>Meu perfil <span id="perfil-estado" class="perfil-estado"></span></summary>
+      <div class="perfil-corpo">
+        <p class="perfil-ajuda">Diga o que você procura e mostramos primeiro as vagas que combinam. Fica salvo só neste navegador.</p>
+
+        <fieldset class="perfil-grupo">
+          <legend>Áreas de interesse</legend>
+          <div id="perfil-areas" class="opcoes"></div>
+        </fieldset>
+
+        <fieldset class="perfil-grupo">
+          <legend>Cidades de interesse</legend>
+          <div id="perfil-cidades" class="opcoes"></div>
+        </fieldset>
+
+        <fieldset class="perfil-grupo">
+          <legend>Tipos de empresa de interesse</legend>
+          <div id="perfil-tipos" class="opcoes"></div>
+        </fieldset>
+
+        <label class="perfil-palavras">Palavras-chave (opcional)
+          <input id="perfil-palavras" type="text" maxlength="200" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
+        </label>
+
+        <p id="aviso-perfil" class="aviso-perfil" hidden>
+          Não foi possível salvar o perfil neste navegador (o armazenamento está bloqueado).
+          Ele continua valendo enquanto esta página estiver aberta.
+        </p>
+
+        <button id="botao-limpar-perfil" type="button" class="botao-limpar-perfil">Limpar perfil</button>
+      </div>
+    </details>
+
     <!-- Filtros: o JavaScript preenche as opções de área, cidade e fonte com os valores que existem nas vagas -->
     <section class="filtros" aria-label="Filtros">
       <label>Área
@@ -36,7 +70,16 @@
       <button id="botao-limpar" type="button">Limpar filtros</button>
     </section>
 
-    <p id="contador" aria-live="polite"></p>
+    <div class="barra-lista">
+      <p id="contador" aria-live="polite"></p>
+      <label class="ordenar">Ordenar:
+        <select id="ordenar">
+          <option value="relevancia">Relevância</option>
+          <option value="recentes">Mais recentes</option>
+          <option value="prazo">Prazo</option>
+        </select>
+      </label>
+    </div>
     <p id="mensagem-vazio" hidden>Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.</p>
     <section id="lista-vagas" class="lista"></section>
   </main>
@@ -44,6 +87,7 @@
   <footer class="rodape">
     Este site apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão;
     a candidatura é feita na página original.
+    <br>Sem login e sem coleta de dados: seu perfil fica só neste navegador e nada é enviado a nenhum servidor.
   </footer>
 
   <!-- Os arquivos de regras e de dados vêm primeiro: criam as listas que o app.js usa -->
