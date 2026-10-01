@@ -35,12 +35,22 @@ formulario.addEventListener("submit", function (evento) {
     tipoEmpresa: ler("tipoEmpresa"),
     fonte: ler("fonte"),
     link: ler("link"),
+    emailCandidatura: ler("emailCandidatura"),
+    assuntoEmail: ler("assuntoEmail"),
     dataPublicacao: ler("dataPublicacao"),
     prazoInscricao: ler("prazoInscricao")
   };
 
   if (vaga.link !== "" && !/^https?:\/\//i.test(vaga.link)) {
     erro.textContent = "O link precisa começar com http:// ou https://";
+    return;
+  }
+  if (vaga.emailCandidatura !== "" && !emailValido(vaga.emailCandidatura)) {
+    erro.textContent = "O e-mail parece inválido. Use o formato nome@empresa.com, sem espaços.";
+    return;
+  }
+  if (vaga.assuntoEmail !== "" && vaga.emailCandidatura === "") {
+    erro.textContent = "O assunto só faz sentido junto com o e-mail. Preencha o e-mail ou apague o assunto.";
     return;
   }
   if (vaga.prazoInscricao && vaga.prazoInscricao < vaga.dataPublicacao) {

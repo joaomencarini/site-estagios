@@ -97,7 +97,8 @@ async function principal() {
   const caminhoJson = path.join(PASTA_DADOS, "status-links.json");
   const antigo = fs.existsSync(caminhoJson) ? JSON.parse(fs.readFileSync(caminhoJson, "utf8")) : {};
 
-  // Só vagas com link, que não são de exemplo e que ainda não venceram
+  // Só vagas com link, que não são de exemplo e que ainda não venceram.
+  // Só o campo "link" é verificado: o e-mail de candidatura (emailCandidatura) nunca é acessado.
   const vagasParaVerificar = [];
   const vistos = new Set();
   todas.forEach(function (vaga) {

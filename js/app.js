@@ -65,6 +65,88 @@ function criar(tag, classe, texto) {
   return elemento;
 }
 
+// Copia um texto para a área de transferência. Devolve uma promessa com true (deu certo) ou false.
+function copiarTexto(texto) {
+  // Plano B para navegadores que bloqueiam a cópia moderna (ex.: página aberta direto do computador)
+  function copiarAntigo() {
+    try {
+      const campo = document.createElement("textarea");
+      campo.value = texto;
+      campo.setAttribute("readonly", "");
+      campo.style.position = "fixed";
+      campo.style.opacity = "0";
+      document.body.appendChild(campo);
+      campo.select();
+      const copiou = document.execCommand("copy");
+      document.body.removeChild(campo);
+      return copiou;
+    } catch (erro) {
+      return false;
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(texto).then(function () { return true; }, copiarAntigo);
+  }
+  return Promise.resolve(copiarAntigo());
+}
+
+// Botão "Copiar ...": copia o texto e avisa "Copiado!" por 2 segundos
+function criarBotaoCopiar(rotulo, texto) {
+  const botao = criar("button", "botao-secundario", rotulo);
+  botao.type = "button";
+  botao.setAttribute("aria-live", "polite");
+  botao.addEventListener("click", function () {
+    copiarTexto(texto).then(function (deuCerto) {
+      botao.textContent = deuCerto ? "Copiado!" : "Não foi possível copiar";
+      setTimeout(function () { botao.textContent = rotulo; }, 2000);
+    });
+  });
+  return botao;
+}
+
+// Link "mailto:" com o assunto codificado (acentos, espaços, "|" e "&" viram códigos %XX)
+function montarMailto(email, assunto) {
+  return "mailto:" + email + (assunto ? "?subject=" + encodeURIComponent(assunto) : "");
+}
+
+// Escreve o e-mail no elemento deixando a linha quebrar só depois de "@" e de pontos (texto puro, sem HTML)
+function escreverEmail(elemento, email) {
+  (email.match(/[^@.]+[@.]?|[@.]/g) || []).forEach(function (parte, posicao) {
+    if (posicao > 0) {
+      elemento.appendChild(document.createElement("wbr"));
+    }
+    elemento.appendChild(document.createTextNode(parte));
+  });
+}
+
+// Bloco "Enviar CV para: ..." com os botões de copiar e de escrever o e-mail
+function criarBlocoEmail(vaga) {
+  const bloco = criar("div", "email-candidatura");
+
+  const linhaEmail = criar("p", "email-linha", "Enviar CV para: ");
+  const endereco = criar("strong", "email-endereco");
+  escreverEmail(endereco, vaga.emailCandidatura);
+  linhaEmail.appendChild(endereco);
+  bloco.appendChild(linhaEmail);
+
+  const botoesEmail = criar("div", "email-botoes");
+  botoesEmail.appendChild(criarBotaoCopiar("Copiar e-mail", vaga.emailCandidatura));
+  const escrever = criar("a", "botao-email", "Escrever e-mail");
+  escrever.href = montarMailto(vaga.emailCandidatura, vaga.assuntoEmail);
+  botoesEmail.appendChild(escrever);
+  bloco.appendChild(botoesEmail);
+
+  if (vaga.assuntoEmail) {
+    const linhaAssunto = criar("p", "email-linha", "Assunto: ");
+    linhaAssunto.appendChild(criar("span", "email-assunto", vaga.assuntoEmail));
+    bloco.appendChild(linhaAssunto);
+    const botoesAssunto = criar("div", "email-botoes");
+    botoesAssunto.appendChild(criarBotaoCopiar("Copiar assunto", vaga.assuntoEmail));
+    bloco.appendChild(botoesAssunto);
+  }
+  return bloco;
+}
+
 // Monta o cartão de uma vaga
 function criarCartao(vaga) {
   const cartao = criar("article", "vaga");
@@ -92,13 +174,20 @@ function criarCartao(vaga) {
   }
   cartao.appendChild(meta);
 
-  // Botão que abre a vaga original em outra aba (sem link válido, o cartão fica sem botão)
+  // Formas de candidatura: botão do link e/ou bloco de e-mail. Sem nenhuma das duas, o cartão fica sem botão.
+  const acoes = criar("div", "acoes");
   if (linkSeguro(vaga.link)) {
     const botao = criar("a", "botao-vaga", "Ver vaga e se candidatar");
     botao.href = vaga.link;
     botao.target = "_blank";
     botao.rel = "noopener noreferrer";
-    cartao.appendChild(botao);
+    acoes.appendChild(botao);
+  }
+  if (emailValido(vaga.emailCandidatura)) {
+    acoes.appendChild(criarBlocoEmail(vaga));
+  }
+  if (acoes.children.length > 0) {
+    cartao.appendChild(acoes);
   }
 
   return cartao;

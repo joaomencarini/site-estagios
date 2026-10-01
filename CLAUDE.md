@@ -51,9 +51,13 @@ Campos em `data/vagas.js` (datas sempre `AAAA-MM-DD`):
 - `tipoEmpresa`: Banco, Corretora, Gestora, Fintech, Consultoria, Seguradora ou Outro
 - `fonte`: onde a vaga foi encontrada (ex.: "LinkedIn", "Polifinance", "Site da empresa")
 - `link` (opcional): endereço da vaga original (precisa começar com `http://` ou `https://`). **Sem link**, o cartão não mostra botão nem aviso. Para vagas sem link, simplesmente não escreva a linha `link`.
+- `emailCandidatura` (opcional): e-mail para onde enviar o CV, nas vagas que não têm página de candidatura. O cartão mostra "Enviar CV para: <e-mail>" com os botões **Copiar e-mail** e **Escrever e-mail** (abre o programa de e-mail do aluno via `mailto:`). Só aparece se o e-mail tiver formato seguro (sem espaços e sem `< > " ' , ; ? & # ( ) / \`); caso contrário é ignorado.
+- `assuntoEmail` (opcional, só vale junto com `emailCandidatura`): assunto sugerido. O cartão mostra "Assunto: ..." com o botão **Copiar assunto**, e o botão "Escrever e-mail" já abre o e-mail com esse assunto (acentos, espaços, `|` e `&` são codificados).
 - `dataPublicacao`
 - `prazoInscricao` (opcional): a vaga **some no dia seguinte** a essa data. Sem prazo definido: não escreva a linha; nesse caso a vaga some 45 dias depois da `dataPublicacao` (ver "Quando uma vaga deixa de aparecer").
 - `exemplo: true` (opcional, só para vagas fictícias de teste): mostra o selo "EXEMPLO"
+
+**Formas de candidatura no cartão:** só `link` = botão "Ver vaga e se candidatar"; só `emailCandidatura` = bloco de e-mail; os dois = os dois (botão do link primeiro); nenhum = sem botão e sem aviso. O texto da vaga é sempre escrito como texto puro (`textContent`), nunca com `innerHTML`.
 
 As vagas automáticas (`data/vagas-auto.js`) têm os mesmos campos mais `origem` (de qual fonte vieram). Guardam só título, empresa, cidade, link e data; `area`, `tipoEmpresa` e `fonte` vêm do `scripts/fontes.json`.
 
@@ -66,12 +70,12 @@ Nada é apagado dos arquivos de dados: o site (`js/app.js` + `js/regras.js`) ape
 - **Mesma vaga nas duas listas** (mesmo link em `vagas.js` e em `vagas-auto.js`): vale a manual e a automática é ignorada. O prazo da manual é mantido (útil para pôr prazo numa vaga que o robô encontrou).
 
 ## Regra do projeto sobre conteúdo das vagas
-**Nunca copiar a descrição completa das vagas.** Guardar só os dados básicos acima e o link da vaga original. A candidatura sempre acontece na página original, e a fonte é sempre indicada no cartão.
+**Nunca copiar a descrição completa das vagas.** Guardar só os dados básicos acima, o link da vaga original e, quando a vaga pedir envio de CV por e-mail, o e-mail e o assunto indicados por ela (e só esses). A candidatura sempre acontece na página original, e a fonte é sempre indicada no cartão.
 
 ## Como cadastrar uma vaga
 1. Encontre a vaga no site de origem (LinkedIn, Polifinance, site da empresa...) e deixe a página aberta.
 2. Abra `adicionar.html` no navegador (duplo clique). Ela não tem link no site público; é uma ferramenta só para quem edita.
-3. Preencha os campos (título, empresa, área, cidade, tipo de empresa, fonte, link, datas; link e prazo podem ficar vazios), clique em **Gerar texto** e depois em **Copiar texto**. O formulário já cuida de aspas e vírgulas.
+3. Preencha os campos (título, empresa, área, cidade, tipo de empresa, fonte, link, e-mail e assunto de candidatura, datas; link, e-mail, assunto e prazo podem ficar vazios), clique em **Gerar texto** e depois em **Copiar texto**. O formulário já cuida de aspas e vírgulas.
 4. Abra `data/vagas.js` no editor e cole o texto **antes** do `];` final, depois da última vaga.
 5. **Confira os links** (ver "Regra permanente" abaixo: aqui no Code a rede é bloqueada, a verificação real é feita pelo workflow).
 6. Salve, abra `index.html` e confira o cartão e o botão "Ver vaga e se candidatar" (vaga sem link fica sem botão).
@@ -109,7 +113,7 @@ A empresa precisa usar o Greenhouse para as vagas. O "token" é a última parte 
 - Se uma empresa falhar (site fora do ar, token errado), as vagas que já existiam dela são mantidas e o log mostra `FALHA`.
 
 ### Verificação de links (`scripts/verificar-links.js`)
-Confere cada vaga **com link**, manual ou automática, que ainda não venceu (vagas de exemplo e sem link são ignoradas). Faz um GET (limite de 15 s, identificando-se como navegador):
+Confere cada vaga **com link**, manual ou automática, que ainda não venceu (vagas de exemplo e sem link são ignoradas). **Só o campo `link` é verificado: `emailCandidatura` e `assuntoEmail` nunca são acessados** (há teste para isso). Faz um GET (limite de 15 s, identificando-se como navegador):
 - **Falha:** HTTP 404 ou 410; endereço (DNS) inexistente; página com status 200 que contenha "expirad", "encerrad", "não está mais disponível", "no longer available", "page not found" ou "job not found" (scripts e estilos da página são ignorados); ou redirecionamento do Greenhouse para a página de erro (`error=true`).
 - **Não verificado** (não conta como falha): 403, 429, erros 5xx, timeout, outros status inesperados e erros de rede. 
 - **Ok:** o resto.
@@ -131,6 +135,7 @@ Confere cada vaga **com link**, manual ou automática, que ainda não venceu (va
 5. **Vagas reais, mantidas à mão** — pronto quando: ≥20 vagas reais com link de candidatura válido e data de publicação; vagas antigas somem ou são marcadas. (Em andamento: 24 vagas reais cadastradas em 01/10/2026, a maioria da Polifinance e sem link. Infraestrutura pronta: campos `fonte`, `link` e `prazoInscricao`, filtro por fonte, `adicionar.html`.)
 5b. **Atualização automática e verificação de links** — pronto quando: o workflow roda sozinho todo dia, atualiza `data/vagas-auto.js` (Greenhouse), registra `data/status-links.json` e o site esconde vagas vencidas ou com link quebrado.
 6. **Evolução (só se necessário)** — favoritos (localStorage), formulário de envio de vaga, backend/banco (ex.: Supabase) apenas se o arquivo de vagas deixar de bastar.
+7. **Candidatura por e-mail** — pronto quando: vagas que pedem CV por e-mail mostram o e-mail com "Copiar e-mail" e "Escrever e-mail" (e assunto, se houver); o verificador de links ignora e-mails; `adicionar.html` gera os dois campos.
 
 ## Convenções
 - Uma etapa por vez; não antecipar funcionalidades das etapas seguintes.

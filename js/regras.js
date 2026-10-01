@@ -47,7 +47,13 @@ function linkInativo(vaga, statusLinks) {
   return Boolean(situacao) && situacao.falhasConsecutivas >= FALHAS_PARA_INATIVAR;
 }
 
+// E-mail simples e seguro para usar em "mailto:": uma arroba, um ponto no domínio, sem espaços
+// e sem símbolos que poderiam adicionar campos ao link (< > " ' , ; ? & # ( ) / \)
+function emailValido(texto) {
+  return typeof texto === "string" && /^[^\s@<>"',;?&#()/\\]+@[^\s@<>"',;?&#()/\\]+\.[^\s@<>"',;?&#()/\\]+$/.test(texto);
+}
+
 // No Node (scripts) exporta as funções; no navegador elas já ficam disponíveis direto
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo };
+  module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo, emailValido };
 }

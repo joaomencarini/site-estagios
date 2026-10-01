@@ -11,6 +11,11 @@
 // Campos de cada vaga:
 //   titulo, empresa, area, cidade, tipoEmpresa, fonte, dataPublicacao
 //   link (opcional): endereço da vaga original. Sem link, o cartão fica sem o botão.
+//   emailCandidatura (opcional): e-mail para enviar o CV. O cartão mostra "Enviar CV para: ..." com os
+//     botões "Copiar e-mail" e "Escrever e-mail" (abre o programa de e-mail).
+//   assuntoEmail (opcional, só com emailCandidatura): assunto sugerido; o cartão mostra "Assunto: ..."
+//     com o botão "Copiar assunto" e já usa o assunto ao escrever o e-mail.
+//   Se houver link e e-mail, o cartão mostra os dois. Sem nenhum dos dois, fica sem botão.
 //   prazoInscricao (opcional): a vaga some no dia seguinte a essa data.
 //     Sem prazo, a vaga some 45 dias depois da data de publicação.
 //   exemplo: true (opcional, só para vagas de teste): mostra o selo "EXEMPLO".
@@ -88,6 +93,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://grupogcbinvestimentos.inhire.app/vagas/6a544b6c-849e-4bfb-9aa5-713481288240/estagio-asset-management",
     dataPublicacao: "2026-09-28"
   },
   {
@@ -217,6 +223,8 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    emailCandidatura: "isabela.ghirali@sten-mfo.com",
+    assuntoEmail: "Estágio Operations - Nome do Candidato",
     dataPublicacao: "2026-09-22"
   },
   {
@@ -226,6 +234,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    emailCandidatura: "selecaodevantrh@gmail.com",
     dataPublicacao: "2026-09-21"
   },
   {
@@ -235,6 +244,19 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
+    emailCandidatura: "corp.dev@agi.com.br",
+    assuntoEmail: "Estagiário(a) de M&A | (Nome Completo)",
     dataPublicacao: "2026-09-21"
+  },
+  {
+    titulo: "Estágio de Investimentos",
+    empresa: "RPA Capital",
+    area: "Investimentos",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3644.html",
+    emailCandidatura: "henrique.watanabe@rpacapital.com",
+    dataPublicacao: "2026-09-18"
   },
 ];
