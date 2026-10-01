@@ -11,6 +11,8 @@
 // Campos de cada vaga:
 //   titulo, empresa, area, cidade, tipoEmpresa, fonte, dataPublicacao
 //   link (opcional): endereço da vaga original. Sem link, o cartão fica sem o botão.
+//   modalidade (opcional): "presencial", "hibrido" ou "remoto". Só preencha se a própria vaga informar.
+//     NUNCA presuma nem invente. Sem esse campo, a vaga aparece normalmente (sem selo de modalidade).
 //   emailCandidatura (opcional): e-mail para enviar o CV. O cartão mostra "Enviar CV para: ..." com os
 //     botões "Copiar e-mail" e "Escrever e-mail" (abre o programa de e-mail).
 //   assuntoEmail (opcional, só com emailCandidatura): assunto sugerido; o cartão mostra "Assunto: ..."

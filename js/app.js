@@ -8,6 +8,11 @@ const listaVagas = document.getElementById("lista-vagas");
 const mensagemVazio = document.getElementById("mensagem-vazio");
 const contador = document.getElementById("contador");
 const selectOrdenar = document.getElementById("ordenar");
+const saudacao = document.getElementById("saudacao");
+const textoPadraoSaudacao = saudacao.textContent;  // texto de sempre, usado quando não há nome
+const caixaNome = document.getElementById("perfil-nome");
+const caixaModalidades = document.getElementById("perfil-modalidades");
+const caixaSoCompativeis = document.getElementById("perfil-so-compativeis");
 const caixaPalavras = document.getElementById("perfil-palavras");
 const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
 const avisoPerfil = document.getElementById("aviso-perfil");
@@ -173,8 +178,9 @@ function criarBlocoEmail(vaga) {
   return bloco;
 }
 
-// Monta o cartão de uma vaga ("combina" = true mostra o selo "Combina com você")
-function criarCartao(vaga, combina) {
+// Monta o cartão de uma vaga. "combina" = true mostra o selo "Combina com você";
+// "avisarSemModalidade" = true (filtro de modalidade ligado) mostra "Modalidade não informada" nas vagas sem esse dado.
+function criarCartao(vaga, combina, avisarSemModalidade) {
   const cartao = criar("article", "vaga");
 
   if (vaga.exemplo || combina) {
@@ -195,6 +201,11 @@ function criarCartao(vaga, combina) {
   const detalhes = criar("div", "detalhes");
   detalhes.appendChild(criar("span", "etiqueta", vaga.area));
   detalhes.appendChild(criar("span", "etiqueta", vaga.tipoEmpresa));
+  // Selo de modalidade só aparece se a vaga tiver o dado (nunca se presume)
+  const modalidade = modalidadeDaVaga(vaga);
+  if (modalidade !== "") {
+    detalhes.appendChild(criar("span", "etiqueta etiqueta-modalidade", ROTULOS_MODALIDADE[modalidade]));
+  }
   detalhes.appendChild(criar("span", "local", vaga.cidade));
   cartao.appendChild(detalhes);
 
@@ -204,6 +215,9 @@ function criarCartao(vaga, combina) {
   meta.appendChild(criar("span", "", "Fonte: " + vaga.fonte));
   if (vaga.prazoInscricao) {
     meta.appendChild(criar("span", "prazo", "Inscrições até " + formatarData(vaga.prazoInscricao)));
+  }
+  if (avisarSemModalidade && modalidade === "") {
+    meta.appendChild(criar("span", "sem-modalidade", "Modalidade não informada"));
   }
   cartao.appendChild(meta);
 
@@ -237,7 +251,7 @@ function mostrarVagas() {
     const passaArea = area === "" || vaga.area === area;
     const passaCidade = cidade === "" || vaga.cidade === cidade;
     const passaFonte = fonte === "" || vaga.fonte === fonte;
-    return passaArea && passaCidade && passaFonte;
+    return passaArea && passaCidade && passaFonte && passaFiltroModalidade(vaga, perfil);
   });
 
   // Ordem escolhida (relevância, mais recentes ou prazo). Sem perfil preenchido, relevância = mais recentes.
@@ -245,14 +259,16 @@ function mostrarVagas() {
 
   listaVagas.replaceChildren();
   ordenadas.forEach(function (vaga) {
-    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil)));
+    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil), perfil.soCompativeis));
   });
 
   // Mensagem diferente se não há nenhuma vaga cadastrada ou se só os filtros esvaziaram a lista
   if (vagasAtivas.length === 0) {
     mensagemVazio.textContent = "Ainda não há vagas abertas cadastradas. Volte em breve!";
   } else {
-    mensagemVazio.textContent = "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.";
+    mensagemVazio.textContent = perfil.soCompativeis
+      ? "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros ou desligar o filtro de modalidade no seu perfil."
+      : "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.";
   }
   mensagemVazio.hidden = filtradas.length > 0;
   contador.textContent = filtradas.length + " de " + vagasAtivas.length + " vagas";
@@ -260,40 +276,75 @@ function mostrarVagas() {
 
 // ===== Meu perfil =====
 
-// Cria as caixinhas de marcar de um grupo (áreas, cidades ou tipos), já marcadas conforme o perfil salvo
+// Cria uma caixinha de marcar dentro de um grupo do painel (texto sempre como texto puro)
+function criarOpcao(caixa, valor, rotulo, marcada) {
+  const etiqueta = document.createElement("label");
+  etiqueta.className = "opcao";
+  const marcador = document.createElement("input");
+  marcador.type = "checkbox";
+  marcador.value = valor;
+  marcador.checked = marcada;
+  const texto = document.createElement("span");
+  texto.textContent = rotulo;
+  etiqueta.append(marcador, texto);
+  caixa.appendChild(etiqueta);
+}
+
+// Caixinhas de áreas, cidades ou tipos: vêm das vagas, já marcadas conforme o perfil salvo
 function criarOpcoesPerfil(campoPerfil, campoVaga) {
-  const caixa = caixasPerfil[campoPerfil];
   valoresUnicos(campoVaga).forEach(function (valor) {
-    const rotulo = document.createElement("label");
-    rotulo.className = "opcao";
-    const marcador = document.createElement("input");
-    marcador.type = "checkbox";
-    marcador.value = valor;
-    marcador.checked = perfil[campoPerfil].some(function (item) {
+    const marcada = perfil[campoPerfil].some(function (item) {
       return normalizarTexto(item) === normalizarTexto(valor);
     });
-    const texto = document.createElement("span");
-    texto.textContent = valor;
-    rotulo.append(marcador, texto);
-    caixa.appendChild(rotulo);
+    criarOpcao(caixasPerfil[campoPerfil], valor, valor, marcada);
   });
+}
+
+// Caixinhas de modalidade: lista fixa (nenhuma vaga é obrigada a ter esse dado)
+function criarOpcoesModalidade() {
+  MODALIDADES.forEach(function (valor) {
+    criarOpcao(caixaModalidades, valor, ROTULOS_MODALIDADE[valor], perfil.modalidades.includes(valor));
+  });
+}
+
+// O filtro de modalidade só pode ficar ligado se houver pelo menos uma modalidade marcada
+function sincronizarFiltroModalidade() {
+  const temModalidade = caixaModalidades.querySelectorAll("input:checked").length > 0;
+  caixaSoCompativeis.disabled = !temModalidade;
+  if (!temModalidade) {
+    caixaSoCompativeis.checked = false;
+  }
 }
 
 // Monta o perfil a partir do que está marcado e escrito na tela
 function lerPerfilDaTela() {
+  sincronizarFiltroModalidade();
   const novo = novoPerfil();
   Object.keys(caixasPerfil).forEach(function (campo) {
     caixasPerfil[campo].querySelectorAll("input:checked").forEach(function (marcador) {
       novo[campo].push(marcador.value);
     });
   });
+  caixaModalidades.querySelectorAll("input:checked").forEach(function (marcador) {
+    novo.modalidades.push(marcador.value);
+  });
+  novo.nome = caixaNome.value;
+  novo.soCompativeis = caixaSoCompativeis.checked;
   novo.palavras = caixaPalavras.value;
   return sanitizarPerfil(novo);
 }
 
 // Texto ao lado de "Meu perfil": mostra se o perfil está ativo
 function mostrarEstadoPerfil() {
-  estadoPerfil.textContent = perfilVazio(perfil) ? "· defina o que você procura" : "· ativo";
+  const ativo = !perfilVazio(perfil) || perfil.nome !== "";
+  estadoPerfil.textContent = ativo ? "· ativo" : "· defina o que você procura";
+}
+
+// Saudação no topo do site. O nome entra sempre como texto puro (textContent), nunca como HTML.
+function mostrarSaudacao() {
+  saudacao.textContent = perfil.nome !== ""
+    ? "Olá, " + perfil.nome + "! Estas são as vagas com mais a ver com você."
+    : textoPadraoSaudacao;
 }
 
 // Chamado a cada mudança no perfil: guarda (se o navegador deixar) e redesenha a lista
@@ -301,17 +352,23 @@ function aoMudarPerfil() {
   perfil = lerPerfilDaTela();
   avisoPerfil.hidden = salvarPerfil(armazenamento, perfil);
   mostrarEstadoPerfil();
+  mostrarSaudacao();
   mostrarVagas();
 }
 
+// "Limpar meu perfil": desmarca tudo, esvazia os campos e APAGA o que estava guardado no navegador
 function limparPerfil() {
-  Object.keys(caixasPerfil).forEach(function (campo) {
-    caixasPerfil[campo].querySelectorAll("input").forEach(function (marcador) {
-      marcador.checked = false;
-    });
+  document.querySelectorAll("#perfil input[type=checkbox]").forEach(function (marcador) {
+    marcador.checked = false;
   });
+  caixaNome.value = "";
   caixaPalavras.value = "";
-  aoMudarPerfil();
+  sincronizarFiltroModalidade();
+  perfil = novoPerfil();
+  avisoPerfil.hidden = apagarPerfil(armazenamento);
+  mostrarEstadoPerfil();
+  mostrarSaudacao();
+  mostrarVagas();
 }
 
 function limparFiltros() {
@@ -332,6 +389,9 @@ selectOrdenar.addEventListener("change", function () {
 Object.keys(caixasPerfil).forEach(function (campo) {
   caixasPerfil[campo].addEventListener("change", aoMudarPerfil);
 });
+caixaModalidades.addEventListener("change", aoMudarPerfil);
+caixaSoCompativeis.addEventListener("change", aoMudarPerfil);
+caixaNome.addEventListener("input", aoMudarPerfil);
 caixaPalavras.addEventListener("input", aoMudarPerfil);
 botaoLimparPerfil.addEventListener("click", limparPerfil);
 
@@ -341,7 +401,12 @@ preencherOpcoes(selectFonte, "fonte");
 criarOpcoesPerfil("areas", "area");
 criarOpcoesPerfil("cidades", "cidade");
 criarOpcoesPerfil("tipos", "tipoEmpresa");
+criarOpcoesModalidade();
+caixaNome.value = perfil.nome;
+caixaSoCompativeis.checked = perfil.soCompativeis;
+sincronizarFiltroModalidade();
 caixaPalavras.value = perfil.palavras;
+mostrarSaudacao();
 avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada
 mostrarEstadoPerfil();
 mostrarVagas();

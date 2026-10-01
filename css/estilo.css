@@ -170,8 +170,8 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 .opcao span { min-width: 0; }
 .opcao:has(input:checked) { background: #e4edf5; border-color: var(--azul); font-weight: 600; }
 .opcao:has(input:focus-visible) { outline: 3px solid var(--azul); outline-offset: 2px; }
-.perfil-palavras { display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; font-weight: 600; color: var(--azul-escuro); }
-.perfil-palavras input {
+.perfil-texto { display: flex; flex-direction: column; gap: 6px; font-size: 0.95rem; font-weight: 600; color: var(--azul-escuro); }
+.perfil-texto input {
   width: 100%;
   min-height: 48px;
   padding: 10px 12px;
@@ -183,7 +183,11 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   border-radius: 8px;
   color: #1b2430;
 }
-.perfil-palavras input:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.perfil-texto input:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.opcao-filtro { margin-top: 10px; }
+.opcao input:disabled + span { color: var(--cinza-texto); }
+.opcao:has(input:disabled) { background: #f3f5f7; cursor: not-allowed; }
+.perfil-dica { margin: 8px 0 0; font-size: 0.85rem; color: var(--cinza-texto); }
 .aviso-perfil {
   margin: 0;
   padding: 10px 12px;
@@ -301,6 +305,14 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   font-weight: 700;
   letter-spacing: 0.08em;
 }
+
+/* Modalidade (Presencial, Híbrido, Remoto): só aparece se a vaga informar */
+.etiqueta.etiqueta-modalidade {
+  background: var(--branco);
+  border: 1px solid #9aa5b1;
+  color: #2b3643;
+}
+.vaga .sem-modalidade { font-style: italic; }
 
 /* Área de candidatura do cartão: botão do link e/ou bloco de e-mail */
 .acoes {

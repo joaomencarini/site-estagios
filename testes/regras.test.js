@@ -5,7 +5,7 @@ const assert = require("node:assert");
 const R = require("../js/regras.js");
 
 const vaga = (extra) => Object.assign({ titulo: "Estágio em Finanças", empresa: "Empresa X", area: "Crédito", cidade: "São Paulo", tipoEmpresa: "Banco", fonte: "Polifinance", dataPublicacao: "2026-09-20" }, extra);
-const perfil = (extra) => Object.assign({ areas: [], cidades: [], tipos: [], palavras: "" }, extra);
+const perfil = (extra) => Object.assign({ nome: "", areas: [], cidades: [], tipos: [], modalidades: [], soCompativeis: false, palavras: "" }, extra);
 
 // ---------------- pontuação ----------------
 test("perfil vazio: nenhuma pontuação e nada de selo", () => {
@@ -172,6 +172,160 @@ test("perfil guardado não vira código: texto estranho é só texto", () => {
   const a = armazenamentoFalso();
   R.salvarPerfil(a, perfil({ palavras: "<img src=x onerror=alert(1)>" }));
   assert.strictEqual(R.lerPerfil(a).palavras, "<img src=x onerror=alert(1)>");
+});
+
+// ---------------- modalidade ----------------
+test("modalidade igual a uma das preferidas vale +2", () => {
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "remoto" }), perfil({ modalidades: ["remoto"] })), 2);
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "hibrido" }), perfil({ modalidades: ["presencial", "hibrido"] })), 2);
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "Híbrido" }), perfil({ modalidades: ["Hibrido"] })), 2);   // acento e caixa livres
+});
+
+test("modalidade diferente de todas as preferidas vale 0 (e a vaga NÃO some)", () => {
+  const p = perfil({ modalidades: ["remoto"] });
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "presencial" }), p), 0);
+  const lista = [vaga({ titulo: "pres", modalidade: "presencial" }), vaga({ titulo: "rem", modalidade: "remoto" })];
+  assert.strictEqual(R.ordenarVagas(lista, "relevancia", p).length, 2);                          // ordenar nunca esconde
+  assert.deepStrictEqual(R.ordenarVagas(lista, "relevancia", p).map(v => v.titulo), ["rem", "pres"]);
+  assert.strictEqual(lista.every(v => R.passaFiltroModalidade(v, p)), true);                     // filtro desligado: todas passam
+});
+
+test("vaga SEM modalidade vale 0 nesse critério, com qualquer preferência", () => {
+  for (const v of [vaga(), vaga({ modalidade: "" }), vaga({ modalidade: null }), vaga({ modalidade: "home office" }), vaga({ modalidade: 7 })]) {
+    assert.strictEqual(R.pontuarVaga(v, perfil({ modalidades: ["remoto", "hibrido", "presencial"] })), 0);
+  }
+  assert.strictEqual(R.modalidadeDaVaga(vaga()), "");
+  assert.strictEqual(R.modalidadeDaVaga(vaga({ modalidade: "home office" })), "");   // valor desconhecido: nunca presumir
+});
+
+test("modalidade soma com os outros critérios (máximo agora 10) e sem preferência não pontua", () => {
+  const p = perfil({ areas: ["Crédito"], cidades: ["São Paulo"], tipos: ["Banco"], palavras: "estágio", modalidades: ["remoto"] });
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "remoto" }), p), 10);
+  assert.strictEqual(R.pontuacaoMaxima(p), 10);
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "remoto" }), perfil({ modalidades: [] })), 0);   // nenhuma marcada = sem preferência
+});
+
+test("só preferir modalidade já é um perfil preenchido; só o nome, não", () => {
+  assert.strictEqual(R.perfilVazio(perfil({ modalidades: ["remoto"] })), false);
+  assert.strictEqual(R.perfilVazio(perfil({ nome: "Maria" })), true);
+  assert.strictEqual(R.perfilVazio(perfil({ nome: "Maria", soCompativeis: true })), true);
+});
+
+test("o nome nunca muda a pontuação nem a ordem", () => {
+  const lista = [vaga({ titulo: "A", dataPublicacao: "2026-09-10" }), vaga({ titulo: "B", dataPublicacao: "2026-09-25" })];
+  const sem = R.ordenarVagas(lista, "relevancia", perfil({ areas: ["Crédito"] })).map(v => v.titulo);
+  const com = R.ordenarVagas(lista, "relevancia", perfil({ areas: ["Crédito"], nome: "Crédito São Paulo Banco" })).map(v => v.titulo);
+  assert.deepStrictEqual(com, sem);
+  assert.strictEqual(R.pontuarVaga(vaga(), perfil({ nome: "Estágio Crédito" })), 0);
+});
+
+test("selo 'Combina com você': vaga sem modalidade não é prejudicada por quem prefere uma modalidade", () => {
+  const p = perfil({ areas: ["Crédito"], cidades: ["São Paulo"], modalidades: ["remoto"] });
+  // sem modalidade: máximo para ela = 5 (área + cidade); tem 5 => combina
+  assert.strictEqual(R.pontuacaoMaxima(p, vaga()), 5);
+  assert.strictEqual(R.combinaComPerfil(vaga(), p), true);
+  // com modalidade diferente: máximo = 7; tem 5 => 71% => combina; só cidade (2/7) não
+  assert.strictEqual(R.combinaComPerfil(vaga({ modalidade: "presencial" }), p), true);
+  assert.strictEqual(R.combinaComPerfil(vaga({ modalidade: "presencial", area: "Risco" }), p), false);
+  // preferir modalidade e mais nada: vaga sem modalidade não ganha selo (nada a comparar), com a preferida ganha
+  const so = perfil({ modalidades: ["remoto"] });
+  assert.strictEqual(R.combinaComPerfil(vaga(), so), false);
+  assert.strictEqual(R.combinaComPerfil(vaga({ modalidade: "remoto" }), so), true);
+});
+
+// ---------------- filtro de modalidade ----------------
+test("filtro DESLIGADO (padrão): todas as vagas passam", () => {
+  const p = perfil({ modalidades: ["remoto"], soCompativeis: false });
+  for (const m of ["remoto", "presencial", "hibrido", undefined, "", "xyz"]) assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: m }), p), true, String(m));
+  assert.strictEqual(R.novoPerfil().soCompativeis, false);
+});
+
+test("filtro LIGADO: some a incompatível; compatível e SEM modalidade continuam", () => {
+  const p = perfil({ modalidades: ["remoto", "hibrido"], soCompativeis: true });
+  assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: "remoto" }), p), true);
+  assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: "Híbrido" }), p), true);
+  assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: "presencial" }), p), false);
+  for (const m of [undefined, null, "", "home office"]) assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: m }), p), true, String(m));
+});
+
+test("filtro ligado sem nenhuma modalidade marcada não existe (sem preferência = sem filtro)", () => {
+  const p = R.sanitizarPerfil({ soCompativeis: true, modalidades: [] });
+  assert.strictEqual(p.soCompativeis, false);
+  assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: "presencial" }), { soCompativeis: true, modalidades: [] }), true);
+});
+
+test("modalidades do perfil: só valores conhecidos, sem repetir", () => {
+  assert.deepStrictEqual(R.sanitizarPerfil({ modalidades: ["Remoto", "remoto", "HÍBRIDO", "home office", 3, null, ""] }).modalidades, ["remoto", "hibrido"]);
+  assert.deepStrictEqual(R.sanitizarPerfil({ modalidades: "remoto" }).modalidades, []);
+});
+
+// ---------------- nome ----------------
+test("nome: tira espaços sobrando e junta espaços repetidos", () => {
+  assert.strictEqual(R.limparNome("   Ana    Maria \t\n Silva  "), "Ana Maria Silva");
+  assert.strictEqual(R.limparNome("   "), "");
+  assert.strictEqual(R.limparNome(""), "");
+});
+
+test("nome: no máximo 60 caracteres (conta emojis como um caractere)", () => {
+  assert.strictEqual(R.limparNome("x".repeat(100)).length, 60);
+  assert.strictEqual(Array.from(R.limparNome("😀".repeat(100))).length, 60);
+  assert.strictEqual(R.limparNome("a".repeat(58) + " b"), "a".repeat(58) + " b");            // exatamente 60: mantém
+  assert.strictEqual(R.limparNome("a".repeat(59) + " b"), "a".repeat(59));                   // 61: corta e não deixa espaço no fim
+  assert.strictEqual(R.limparNome("a".repeat(59) + " " + "b".repeat(10)), "a".repeat(59));
+});
+
+test("nome com <script>, aspas e HTML continua sendo só texto (quem exibe usa textContent)", () => {
+  const perigoso = "<script>alert(1)</script> \"O'Brien\" <img src=x onerror=alert(2)>";
+  const limpo = R.limparNome(perigoso);
+  assert.ok(limpo.startsWith("<script>alert(1)</script>"));          // não é "consertado": fica como texto literal
+  assert.ok(limpo.length <= 60);
+  assert.strictEqual(R.sanitizarPerfil({ nome: perigoso }).nome, limpo);
+});
+
+test("nome: tipos estranhos e caracteres de controle viram texto seguro ou vazio", () => {
+  for (const ruim of [null, undefined, 5, {}, [], true]) assert.strictEqual(R.limparNome(ruim), "", String(ruim));
+  assert.strictEqual(R.limparNome("Ana\u0000\u0007Maria"), "Ana Maria");
+});
+
+// ---------------- armazenamento com os campos novos ----------------
+test("ida e volta com nome, modalidades e filtro", () => {
+  const a = armazenamentoFalso();
+  const p = perfil({ nome: "Maria Clara", areas: ["Risco"], modalidades: ["remoto", "hibrido"], soCompativeis: true, palavras: "m&a" });
+  assert.strictEqual(R.salvarPerfil(a, p), true);
+  assert.deepStrictEqual(R.lerPerfil(a), p);
+});
+
+test("perfil antigo (da etapa 6, sem nome nem modalidade) continua válido", () => {
+  const a = armazenamentoFalso();
+  a.dados[R.CHAVE_PERFIL] = JSON.stringify({ areas: ["Risco"], cidades: [], tipos: ["Banco"], palavras: "valuation" });
+  assert.deepStrictEqual(R.lerPerfil(a), perfil({ areas: ["Risco"], tipos: ["Banco"], palavras: "valuation" }));
+});
+
+test("nome gigante guardado no navegador é cortado ao ler", () => {
+  const a = armazenamentoFalso();
+  a.dados[R.CHAVE_PERFIL] = JSON.stringify({ nome: "N".repeat(5000) });
+  assert.strictEqual(R.lerPerfil(a).nome.length, 60);
+});
+
+test("localStorage indisponível: nome, modalidade e filtro funcionam na memória; salvar devolve false, sem erro", () => {
+  const bloqueado = { getItem() { throw new Error("SecurityError"); }, setItem() { throw new Error("Quota"); }, removeItem() { throw new Error("SecurityError"); } };
+  for (const arm of [null, undefined, bloqueado]) {
+    assert.deepStrictEqual(R.lerPerfil(arm), perfil());
+    assert.strictEqual(R.salvarPerfil(arm, perfil({ nome: "Ana", modalidades: ["remoto"] })), false);
+    assert.strictEqual(R.apagarPerfil(arm), false);
+  }
+  const p = R.sanitizarPerfil({ nome: "  Ana  ", modalidades: ["remoto"], soCompativeis: true });   // o perfil em memória segue válido
+  assert.strictEqual(R.pontuarVaga(vaga({ modalidade: "remoto" }), p), 2);
+  assert.strictEqual(R.passaFiltroModalidade(vaga({ modalidade: "presencial" }), p), false);
+});
+
+test("apagar perfil remove tudo do armazenamento", () => {
+  const a = armazenamentoFalso(); a.removeItem = (k) => { delete a.dados[k]; };
+  R.salvarPerfil(a, perfil({ nome: "Ana", areas: ["Risco"], modalidades: ["remoto"], soCompativeis: true }));
+  assert.ok(R.CHAVE_PERFIL in a.dados);
+  assert.strictEqual(R.apagarPerfil(a), true);
+  assert.strictEqual(R.CHAVE_PERFIL in a.dados, false);
+  assert.deepStrictEqual(R.lerPerfil(a), perfil());
 });
 
 // ---------------- regras que já existiam (rede de segurança) ----------------

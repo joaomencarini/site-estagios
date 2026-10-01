@@ -9,7 +9,7 @@
 <body>
   <header class="topo">
     <h1>Estágios no Mercado Financeiro</h1>
-    <p>Vagas de estágio para universitários brasileiros, com link para a página original de cada vaga.</p>
+    <p id="saudacao">Vagas de estágio para universitários brasileiros, com link para a página original de cada vaga.</p>
   </header>
 
   <main>
@@ -18,6 +18,10 @@
       <summary>Meu perfil <span id="perfil-estado" class="perfil-estado"></span></summary>
       <div class="perfil-corpo">
         <p class="perfil-ajuda">Diga o que você procura e mostramos primeiro as vagas que combinam. Fica salvo só neste navegador.</p>
+
+        <label class="perfil-texto">Seu nome (opcional)
+          <input id="perfil-nome" type="text" maxlength="60" autocomplete="off" placeholder="Como podemos te chamar?">
+        </label>
 
         <fieldset class="perfil-grupo">
           <legend>Áreas de interesse</legend>
@@ -34,7 +38,17 @@
           <div id="perfil-tipos" class="opcoes"></div>
         </fieldset>
 
-        <label class="perfil-palavras">Palavras-chave (opcional)
+        <fieldset class="perfil-grupo">
+          <legend>Modalidade preferida (nenhuma marcada = sem preferência)</legend>
+          <div id="perfil-modalidades" class="opcoes"></div>
+          <label class="opcao opcao-filtro">
+            <input id="perfil-so-compativeis" type="checkbox" disabled>
+            <span>Só mostrar vagas compatíveis com minha modalidade</span>
+          </label>
+          <p class="perfil-dica">Vagas sem modalidade informada continuam aparecendo, com a indicação "modalidade não informada".</p>
+        </fieldset>
+
+        <label class="perfil-texto">Palavras-chave (opcional)
           <input id="perfil-palavras" type="text" maxlength="200" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
         </label>
 
@@ -43,7 +57,7 @@
           Ele continua valendo enquanto esta página estiver aberta.
         </p>
 
-        <button id="botao-limpar-perfil" type="button" class="botao-limpar-perfil">Limpar perfil</button>
+        <button id="botao-limpar-perfil" type="button" class="botao-limpar-perfil">Limpar meu perfil</button>
       </div>
     </details>
 
@@ -87,7 +101,7 @@
   <footer class="rodape">
     Este site apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão;
     a candidatura é feita na página original.
-    <br>Sem login e sem coleta de dados: seu perfil fica só neste navegador e nada é enviado a nenhum servidor.
+    <br>Sem login e sem coleta de dados: seu perfil (inclusive o nome, se você o informar) fica só neste navegador e nada é enviado a nenhum servidor.
   </footer>
 
   <!-- Os arquivos de regras e de dados vêm primeiro: criam as listas que o app.js usa -->

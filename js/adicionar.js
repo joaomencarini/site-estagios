@@ -33,6 +33,7 @@ formulario.addEventListener("submit", function (evento) {
     area: ler("area"),
     cidade: ler("cidade"),
     tipoEmpresa: ler("tipoEmpresa"),
+    modalidade: ler("modalidade"),
     fonte: ler("fonte"),
     link: ler("link"),
     emailCandidatura: ler("emailCandidatura"),
@@ -41,6 +42,10 @@ formulario.addEventListener("submit", function (evento) {
     prazoInscricao: ler("prazoInscricao")
   };
 
+  if (vaga.modalidade !== "" && modalidadePadrao(vaga.modalidade) === "") {
+    erro.textContent = "Modalidade inválida. Use Presencial, Híbrido ou Remoto (ou deixe em branco).";
+    return;
+  }
   if (vaga.link !== "" && !/^https?:\/\//i.test(vaga.link)) {
     erro.textContent = "O link precisa começar com http:// ou https://";
     return;
