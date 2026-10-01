@@ -1,0 +1,45 @@
+name: Atualizar vagas
+
+on:
+  schedule:
+    - cron: "0 11 * * *"   # 11:00 UTC = 08:00 em Brasília, todo dia
+  workflow_dispatch:        # permite rodar na mão (aba Actions > Run workflow)
+
+# Permissão para o workflow gravar (commit) neste repositório
+permissions:
+  contents: write
+
+# Evita duas execuções ao mesmo tempo
+concurrency:
+  group: atualizar-vagas
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar o Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Buscar vagas novas (Greenhouse)
+        run: node scripts/atualizar-vagas.js
+
+      - name: Verificar links das vagas
+        run: node scripts/verificar-links.js
+
+      - name: Fazer commit se houve mudança
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança nas vagas."
+          else
+            git commit -m "Atualiza vagas automaticamente"
+            git push
+          fi
