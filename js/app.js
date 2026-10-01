@@ -1,4 +1,4 @@
-// A lista "vagas" vem do arquivo data/vagas.js (carregado antes deste).
+// As listas "vagas" (manuais) e "vagasAuto" (automáticas) vêm dos arquivos em data/, carregados antes deste.
 
 const selectArea = document.getElementById("filtro-area");
 const selectCidade = document.getElementById("filtro-cidade");
@@ -14,18 +14,20 @@ function formatarData(dataIso) {
   return dia + "/" + mes + "/" + ano;
 }
 
-// Data de hoje no formato AAAA-MM-DD, no fuso do computador de quem abre o site
-function hojeIso() {
-  const agora = new Date();
-  const mes = String(agora.getMonth() + 1).padStart(2, "0");
-  const dia = String(agora.getDate()).padStart(2, "0");
-  return agora.getFullYear() + "-" + mes + "-" + dia;
-}
+// Junta as vagas manuais (data/vagas.js) com as automáticas (data/vagas-auto.js).
+// Se o mesmo link existir nas duas, vale a vaga manual.
+const linksManuais = vagas.filter(function (vaga) { return vaga.link; }).map(function (vaga) { return vaga.link; });
+const automaticas = (typeof vagasAuto !== "undefined" ? vagasAuto : []).filter(function (vaga) {
+  return !vaga.link || !linksManuais.includes(vaga.link);
+});
+const todasVagas = vagas.concat(automaticas);
+const situacaoLinks = typeof statusLinks !== "undefined" ? statusLinks : {};
 
-// Só aparecem vagas sem prazo ou com prazo de hoje em diante (prazo vencido some sozinho)
+// Só aparecem vagas que não venceram (regras em js/regras.js) e cujo link não está quebrado.
+// Nada é apagado dos arquivos: a vaga só deixa de ser mostrada.
 const hoje = hojeIso();
-const vagasAtivas = vagas.filter(function (vaga) {
-  return !vaga.prazoInscricao || vaga.prazoInscricao >= hoje;
+const vagasAtivas = todasVagas.filter(function (vaga) {
+  return !vagaVencida(vaga, hoje) && !linkInativo(vaga, situacaoLinks);
 });
 
 // Só aceita links que começam com http:// ou https:// (evita links perigosos)

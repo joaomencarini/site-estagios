@@ -11,22 +11,12 @@
 // Campos de cada vaga:
 //   titulo, empresa, area, cidade, tipoEmpresa, fonte, dataPublicacao
 //   link: endereço da vaga original. Se faltar, o cartão mostra o aviso de candidatura por e-mail.
-//   prazoInscricao (opcional): depois dessa data a vaga some sozinha do site.
+//   prazoInscricao (opcional): a vaga some no dia seguinte a essa data.
+//     Sem prazo, a vaga some 45 dias depois da data de publicação.
 //   exemplo: true (opcional, só para vagas de teste): mostra o selo "EXEMPLO".
 //   Datas sempre no formato AAAA-MM-DD (ex.: 2026-10-15).
 // ============================================================
 const vagas = [
-  {
-    titulo: "Estágio em Investment Banking",
-    empresa: "Bank of America",
-    area: "Investment Banking",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Site da empresa",
-    link: "https://careers.bankofamerica.com/en-us/students/job-detail/13192/2026-brazil-investment-banking-internship-program-sao-paulo-brazil",
-    dataPublicacao: "2026-10-01",
-    prazoInscricao: "2027-01-01"
-  },
   {
     titulo: "Programa de Estágio XTAG 2027",
     empresa: "XP Inc.",
@@ -46,16 +36,6 @@ const vagas = [
     tipoEmpresa: "Banco",
     fonte: "Site da empresa",
     link: "https://www.ciadeestagios.com.br/vagas/bancoabcbrasil/",
-    dataPublicacao: "2026-10-01"
-  },
-  {
-    titulo: "Estágio de Férias (jan-fev/2027)",
-    empresa: "BTG Pactual",
-    area: "Diversas",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Site da empresa",
-    link: "https://conteudo.btgpactual.com/estagio-de-ferias",
     dataPublicacao: "2026-10-01"
   },
   {
