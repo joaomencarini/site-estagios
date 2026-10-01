@@ -1,1 +1,30 @@
-{}
+{
+  "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8805413002": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://lp.xpi.com.br/programa_de_estagio": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "nao-verificado",
+    "motivo": "HTTP 403 (o site pode estar bloqueando o teste)",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3669.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://www.ciadeestagios.com.br/vagas/bancoabcbrasil/": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  }
+}
