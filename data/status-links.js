@@ -1,5 +1,12 @@
 // GERADO por scripts/verificar-links.js (cópia de status-links.json para o site conseguir ler). Não edite.
 const statusLinks = {
+  "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8680906002": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
   "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8805413002": {
     "ultimaChecagem": "2026-10-01",
     "ultimoResultado": "ok",
@@ -7,10 +14,94 @@ const statusLinks = {
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
-  "https://lp.xpi.com.br/programa_de_estagio": {
+  "https://jobs.quickin.io/ativainvestimentos/jobs/6aaab6a0f62a2400138d40f8": {
     "ultimaChecagem": "2026-10-01",
-    "ultimoResultado": "nao-verificado",
-    "motivo": "HTTP 403 (o site pode estar bloqueando o teste)",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3640.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3642.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3645.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3647.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3649.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3651.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3654.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3655.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3656.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3659.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3664.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://mailing-polifinance.github.io/banner3666.html": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
@@ -21,7 +112,21 @@ const statusLinks = {
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
+  "https://vagas.artica.capital/": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
   "https://www.ciadeestagios.com.br/vagas/bancoabcbrasil/": {
+    "ultimaChecagem": "2026-10-01",
+    "ultimoResultado": "ok",
+    "motivo": "HTTP 200",
+    "falhasConsecutivas": 0,
+    "ultimaFalhaEm": null
+  },
+  "https://www.portalsinergyrh.com.br/Portal/MeuPortal/MeuPortal?empresa=1600&master=0": {
     "ultimaChecagem": "2026-10-01",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
