@@ -50,7 +50,7 @@ Campos em `data/vagas.js` (datas sempre `AAAA-MM-DD`):
 - `cidade`
 - `tipoEmpresa`: Banco, Corretora, Gestora, Fintech, Consultoria, Seguradora ou Outro
 - `fonte`: onde a vaga foi encontrada (ex.: "LinkedIn", "Polifinance", "Site da empresa")
-- `link` (opcional): endereço da vaga original (precisa começar com `http://` ou `https://`). **Sem link**, o cartão não mostra o botão e exibe no lugar: "Candidatura por e-mail: veja o alerta da Polifinance". Para vagas sem link, simplesmente não escreva a linha `link`.
+- `link` (opcional): endereço da vaga original (precisa começar com `http://` ou `https://`). **Sem link**, o cartão não mostra botão nem aviso. Para vagas sem link, simplesmente não escreva a linha `link`.
 - `dataPublicacao`
 - `prazoInscricao` (opcional): a vaga **some no dia seguinte** a essa data. Sem prazo definido: não escreva a linha; nesse caso a vaga some 45 dias depois da `dataPublicacao` (ver "Quando uma vaga deixa de aparecer").
 - `exemplo: true` (opcional, só para vagas fictícias de teste): mostra o selo "EXEMPLO"
@@ -60,10 +60,10 @@ As vagas automáticas (`data/vagas-auto.js`) têm os mesmos campos mais `origem`
 ## Quando uma vaga deixa de aparecer no site
 Nada é apagado dos arquivos de dados: o site (`js/app.js` + `js/regras.js`) apenas **esconde** a vaga. Vale para vagas manuais e automáticas:
 - **Com `prazoInscricao`:** some no dia seguinte ao prazo (no dia do prazo ainda aparece).
-- **Sem prazo:** some **45 dias depois da `dataPublicacao`**. Exemplo: publicada em 2026-10-01, aparece até 2026-11-14 e some a partir de 2026-11-15. Quem manda é o prazo: se houver prazo, a regra dos 45 dias não é usada.
+- **Vaga manual sem prazo:** some **45 dias depois da `dataPublicacao`**. Exemplo: publicada em 2026-10-01, aparece até 2026-11-14 e some a partir de 2026-11-15. Quem manda é o prazo: se houver prazo, a regra dos 45 dias não é usada.
+- **Vaga automática (tem o campo `origem`):** **não usa a regra dos 45 dias**. Enquanto a fonte (Greenhouse) listar a vaga, ela está aberta; quando some da fonte, o script a tira de `data/vagas-auto.js` e ela deixa de ser mostrada.
 - **Link quebrado:** some quando o link falha em **2 dias diferentes** (ver "Verificação de links"). Se o link voltar a funcionar, a vaga volta.
-- **Vaga automática que saiu da API da empresa:** sai de `data/vagas-auto.js` na próxima atualização (o histórico fica no Git).
-- Se o mesmo link existir em `vagas.js` e em `vagas-auto.js`, vale a vaga manual.
+- **Mesma vaga nas duas listas** (mesmo link em `vagas.js` e em `vagas-auto.js`): vale a manual e a automática é ignorada. O prazo da manual é mantido (útil para pôr prazo numa vaga que o robô encontrou).
 
 ## Regra do projeto sobre conteúdo das vagas
 **Nunca copiar a descrição completa das vagas.** Guardar só os dados básicos acima e o link da vaga original. A candidatura sempre acontece na página original, e a fonte é sempre indicada no cartão.
@@ -73,18 +73,19 @@ Nada é apagado dos arquivos de dados: o site (`js/app.js` + `js/regras.js`) ape
 2. Abra `adicionar.html` no navegador (duplo clique). Ela não tem link no site público; é uma ferramenta só para quem edita.
 3. Preencha os campos (título, empresa, área, cidade, tipo de empresa, fonte, link, datas; link e prazo podem ficar vazios), clique em **Gerar texto** e depois em **Copiar texto**. O formulário já cuida de aspas e vírgulas.
 4. Abra `data/vagas.js` no editor e cole o texto **antes** do `];` final, depois da última vaga.
-5. **Teste o link** de cada vaga nova (ver "Regra permanente" abaixo).
-6. Salve, abra `index.html` e confira o cartão e o botão "Ver vaga e se candidatar" (ou o aviso de candidatura por e-mail, se não houver link).
+5. **Confira os links** (ver "Regra permanente" abaixo: aqui no Code a rede é bloqueada, a verificação real é feita pelo workflow).
+6. Salve, abra `index.html` e confira o cartão e o botão "Ver vaga e se candidatar" (vaga sem link fica sem botão).
 7. Publique: `git add .`, `git commit -m "Adiciona vagas"` e `git push` na `main`. O GitHub Pages atualiza o site em cerca de 1 a 3 minutos.
 
 Vagas manuais que saíram do ar na fonte original devem ser removidas de `data/vagas.js` (as demais somem sozinhas pelas regras da seção anterior).
 
-## Regra permanente: testar links antes de publicar
-Sempre que o João pedir para adicionar vagas:
-1. **Teste o link de cada vaga nova com um GET** (por exemplo `curl -sSL -m 15 -A "Mozilla/5.0" -o /dev/null -w "%{http_code}" LINK`) **antes do commit**, e informe o resultado de cada link.
-2. **Não publique** vaga com link quebrado (404, 410, DNS inexistente) ou com inscrições encerradas (página dizendo "encerrada", "expirada", "no longer available" etc.). Avise o João e deixe a vaga de fora.
-3. Se a rede do ambiente bloquear os testes, **avise quais links ficaram sem teste** (e não afirme que estão funcionando). Vaga sem link não precisa de teste.
-4. 403, 429, erro 5xx ou timeout significam "não deu para saber": informe como "não verificado", sem tratar como quebrado.
+## Regra permanente: verificação de links
+**O ambiente do Claude Code bloqueia a rede e não consegue testar links** (os sites das vagas e a API do Greenhouse são bloqueados). A verificação real acontece no workflow do GitHub. Por isso, sempre que o João pedir para adicionar vagas:
+1. **Nunca diga que um link foi testado, ou que funciona, se o teste foi bloqueado** (ou nem foi feito). Diga "sem teste".
+2. Avise sempre, ao entregar: "A verificação real acontece no workflow do GitHub: rode **Actions > Atualizar vagas > Run workflow** e confira o bloco **RESUMO** do passo **Verificar links**."
+3. Se o João disser que já testou os links, aceite e registre isso; se um teste for possível de verdade (rede liberada), faça um GET em cada link novo antes do commit e informe o resultado de cada um.
+4. Não publique vaga que se saiba estar com link quebrado (404, 410, DNS inexistente) ou com inscrições encerradas; avise o João e deixe a vaga de fora.
+5. Vaga sem link não precisa de teste. 403, 429, erro 5xx ou timeout significam "não verificado", não "quebrado".
 
 ## Como funciona a atualização automática
 O workflow `.github/workflows/atualizar-vagas.yml` roda todo dia às 8h (Brasília) e também manualmente (aba **Actions** > **Atualizar vagas** > **Run workflow**). Ele executa `atualizar-vagas.js`, depois `verificar-links.js`, e só faz commit se algum arquivo em `data/` mudou. Para rodar no computador: `node scripts/atualizar-vagas.js` e `node scripts/verificar-links.js` (Node 18 ou mais novo).
@@ -97,11 +98,13 @@ A empresa precisa usar o Greenhouse para as vagas. O "token" é a última parte 
   "greenhouse": "token-da-empresa",
   "tipoEmpresa": "Banco",
   "area": "Diversas",
-  "fonte": "Site da empresa"
+  "fonte": "Site da empresa",
+  "ignorarIds": []
 }
 ```
 - `empresa`: nome que aparece no cartão. `tipoEmpresa`: Banco, Corretora, Gestora, Fintech, Consultoria, Seguradora ou Outro. `area` e `fonte`: valores usados nos filtros.
-- O script guarda só vagas cujo título tenha "estágio", "estagiário" ou "internship" (sem diferenciar maiúsculas ou acentos), e nunca guarda a descrição.
+- O script guarda só vagas cujo título tenha "estágio", "estagiário(a)", "internship" ou "summer job" (sem diferenciar maiúsculas ou acentos), e nunca guarda a descrição.
+- Ele **ignora** títulos que contenham "2026.1" (ciclo antigo) e vagas cujo ID esteja em `ignorarIds`. O ID é o número no fim do endereço da vaga (`.../jobs/8805413002` tem ID `8805413002`). Exemplo: `"ignorarIds": ["8805413002", "8680906002"]`. `ignorarIds` é opcional e vale só para a empresa em que está escrito.
 - Para parar de buscar uma empresa, remova o bloco: as vagas dela saem de `vagas-auto.js` na próxima atualização.
 - Se uma empresa falhar (site fora do ar, token errado), as vagas que já existiam dela são mantidas e o log mostra `FALHA`.
 

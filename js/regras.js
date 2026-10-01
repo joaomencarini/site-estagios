@@ -1,7 +1,7 @@
 // Regras compartilhadas: o site (navegador) e os scripts (Node) usam este mesmo arquivo,
 // assim as regras ficam iguais nos dois lugares.
 
-const DIAS_SEM_PRAZO = 45;       // vaga sem prazo some 45 dias depois da data de publicação
+const DIAS_SEM_PRAZO = 45;       // vaga MANUAL sem prazo some 45 dias depois da data de publicação
 const FALHAS_PARA_INATIVAR = 2;  // falhas de link em dias diferentes para esconder a vaga
 
 // Data de hoje no formato AAAA-MM-DD.
@@ -23,11 +23,17 @@ function diasEntre(inicio, fim) {
   return Math.round((Date.UTC(a2, m2 - 1, d2) - Date.UTC(a1, m1 - 1, d1)) / 86400000);
 }
 
-// Vaga vencida: com prazo, some no dia seguinte ao prazo;
-// sem prazo, some quando completa DIAS_SEM_PRAZO dias desde a publicação.
+// Vaga vencida:
+// - com prazo: some no dia seguinte ao prazo;
+// - automática (tem "origem") sem prazo: nunca vence por idade. Enquanto a fonte listar a vaga ela está
+//   aberta, e quando some da fonte o script a tira de data/vagas-auto.js;
+// - manual sem prazo: some quando completa DIAS_SEM_PRAZO dias desde a publicação.
 function vagaVencida(vaga, hoje) {
   if (vaga.prazoInscricao) {
     return vaga.prazoInscricao < hoje;
+  }
+  if (vaga.origem) {
+    return false;
   }
   if (!vaga.dataPublicacao) {
     return false;

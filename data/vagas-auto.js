@@ -26,15 +26,4 @@ const vagasAuto = [
     dataPublicacao: "2026-08-04",
     origem: "greenhouse:candidaturasdirecionadasxpinc"
   },
-  {
-    titulo: "Pré Inscrição - Programa de Estágio XP Inc. 2026.1",
-    empresa: "XP Inc.",
-    area: "Diversas",
-    cidade: "São Paulo",
-    tipoEmpresa: "Corretora",
-    fonte: "Site da empresa",
-    link: "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8093105002",
-    dataPublicacao: "2025-07-25",
-    origem: "greenhouse:candidaturasdirecionadasxpinc"
-  },
 ];

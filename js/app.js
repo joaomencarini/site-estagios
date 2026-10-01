@@ -92,11 +92,8 @@ function criarCartao(vaga) {
   }
   cartao.appendChild(meta);
 
-  if (!vaga.link) {
-    // Sem link: a candidatura não é feita por página, então mostramos um aviso no lugar do botão
-    cartao.appendChild(criar("p", "sem-link", "Candidatura por e-mail: veja o alerta da Polifinance"));
-  } else if (linkSeguro(vaga.link)) {
-    // Botão que abre a vaga original em outra aba
+  // Botão que abre a vaga original em outra aba (sem link válido, o cartão fica sem botão)
+  if (linkSeguro(vaga.link)) {
     const botao = criar("a", "botao-vaga", "Ver vaga e se candidatar");
     botao.href = vaga.link;
     botao.target = "_blank";

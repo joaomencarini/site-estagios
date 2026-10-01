@@ -15,7 +15,7 @@ const SIMULTANEOS = 5;
 const FRASES_ENCERRADA = ["expirad", "encerrad", "nao esta mais disponivel", "no longer available", "page not found", "job not found"];
 
 function simplificar(texto) {
-  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+  return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 }
 
 // Faz um GET e classifica o resultado: { resultado: "ok" | "falha" | "nao-verificado", motivo }

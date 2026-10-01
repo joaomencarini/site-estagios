@@ -4,6 +4,7 @@
     "greenhouse": "candidaturasdirecionadasxpinc",
     "tipoEmpresa": "Corretora",
     "area": "Diversas",
-    "fonte": "Site da empresa"
+    "fonte": "Site da empresa",
+    "ignorarIds": []
   }
 ]

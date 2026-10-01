@@ -8,10 +8,16 @@ const { PASTA_DADOS, ARQUIVO_FONTES, hoje, NAVEGADOR, lerLista, gravarSeMudou } 
 const API = process.env.GREENHOUSE_API || "https://boards-api.greenhouse.io/v1/boards";
 const TEMPO_LIMITE_MS = Number(process.env.TEMPO_LIMITE_MS) || 20000;
 
-// Título tem "estágio", "estagiário" ou "internship"? (ignora maiúsculas e acentos)
+// Título tem "estágio", "estagiário", "internship" ou "summer job"? (ignora maiúsculas e acentos)
 function ehEstagio(titulo) {
-  const texto = String(titulo).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-  return /estagi|internship/.test(texto);
+  const texto = String(titulo).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  return /estagi|internship|summer job/.test(texto);
+}
+
+// Vagas que não queremos: ciclo antigo ("2026.1" no título) ou ID listado em "ignorarIds" no fontes.json
+function deveIgnorar(job, fonte) {
+  const ids = (fonte.ignorarIds || []).map(String);
+  return String(job.title).includes("2026.1") || ids.includes(String(job.id));
 }
 
 // "São Paulo, Brazil" vira "São Paulo"
@@ -100,7 +106,7 @@ async function principal() {
         throw new Error("a API devolveu 0 vagas (suspeito); mantendo as que já existiam");
       }
       novas = jobs
-        .filter(function (job) { return job.title && job.absolute_url && ehEstagio(job.title); })
+        .filter(function (job) { return job.title && job.absolute_url && ehEstagio(job.title) && !deveIgnorar(job, fonte); })
         .map(function (job) {
           const antiga = dessaFonte.find(function (vaga) { return vaga.link === job.absolute_url; });
           return montarVaga(job, fonte, origem, antiga);

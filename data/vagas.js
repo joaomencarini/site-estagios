@@ -10,7 +10,7 @@
 //
 // Campos de cada vaga:
 //   titulo, empresa, area, cidade, tipoEmpresa, fonte, dataPublicacao
-//   link: endereço da vaga original. Se faltar, o cartão mostra o aviso de candidatura por e-mail.
+//   link (opcional): endereço da vaga original. Sem link, o cartão fica sem o botão.
 //   prazoInscricao (opcional): a vaga some no dia seguinte a essa data.
 //     Sem prazo, a vaga some 45 dias depois da data de publicação.
 //   exemplo: true (opcional, só para vagas de teste): mostra o selo "EXEMPLO".
@@ -24,7 +24,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Corretora",
     fonte: "Site da empresa",
-    link: "https://lp.xpi.com.br/programa_de_estagio",
+    link: "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8805413002",
     dataPublicacao: "2026-10-01",
     prazoInscricao: "2026-10-13"
   },
@@ -56,7 +56,9 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Outro",
     fonte: "Polifinance",
-    dataPublicacao: "2026-09-29"
+    link: "https://vagas.artica.capital/",
+    dataPublicacao: "2026-09-29",
+    prazoInscricao: "2026-10-23"
   },
   {
     titulo: "Estágio em Investment Banking",
@@ -65,7 +67,9 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
-    dataPublicacao: "2026-09-29"
+    link: "https://mailing-polifinance.github.io/banner3664.html",
+    dataPublicacao: "2026-09-29",
+    prazoInscricao: "2026-10-02"
   },
   {
     titulo: "Estágio ou Estágio de Férias em DCM",
@@ -74,6 +78,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
+    link: "https://www.portalsinergyrh.com.br/Portal/MeuPortal/MeuPortal?empresa=1600&master=0",
     dataPublicacao: "2026-09-29"
   },
   {
@@ -92,6 +97,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3666.html",
     dataPublicacao: "2026-09-28"
   },
   {
@@ -101,6 +107,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3655.html",
     dataPublicacao: "2026-09-28"
   },
   {
@@ -110,6 +117,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Outro",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3654.html",
     dataPublicacao: "2026-09-25"
   },
   {
@@ -119,6 +127,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3659.html",
     dataPublicacao: "2026-09-25"
   },
   {
@@ -128,6 +137,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Corretora",
     fonte: "Polifinance",
+    link: "https://jobs.quickin.io/ativainvestimentos/jobs/6aaab6a0f62a2400138d40f8",
     dataPublicacao: "2026-09-25"
   },
   {
@@ -137,6 +147,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3656.html",
     dataPublicacao: "2026-09-24"
   },
   {
@@ -146,6 +157,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3651.html",
     dataPublicacao: "2026-09-24"
   },
   {
@@ -155,6 +167,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3645.html",
     dataPublicacao: "2026-09-24"
   },
   {
@@ -164,6 +177,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Outro",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3647.html",
     dataPublicacao: "2026-09-23"
   },
   {
@@ -173,6 +187,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3640.html",
     dataPublicacao: "2026-09-23"
   },
   {
@@ -182,6 +197,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3649.html",
     dataPublicacao: "2026-09-23"
   },
   {
@@ -191,6 +207,7 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Gestora",
     fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3642.html",
     dataPublicacao: "2026-09-23"
   },
   {
@@ -219,5 +236,5 @@ const vagas = [
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
     dataPublicacao: "2026-09-21"
-  }
+  },
 ];
