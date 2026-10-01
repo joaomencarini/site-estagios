@@ -257,6 +257,6 @@ const vagas = [
     fonte: "Polifinance",
     link: "https://mailing-polifinance.github.io/banner3644.html",
     emailCandidatura: "henrique.watanabe@rpacapital.com",
-    dataPublicacao: "2026-09-18"
+    dataPublicacao: "2026-09-23"
   },
 ];
