@@ -152,27 +152,155 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   color: var(--verde);
 }
 
-/* Cidade e data ficam em linha própria, abaixo das etiquetas */
-.vaga .local,
-.vaga .data { flex-basis: 100%; }
-.vaga .local { margin-top: 6px; color: #1b2430; font-weight: 600; }
+/* Cidade fica em linha própria no celular */
+.vaga .local { flex-basis: 100%; margin-top: 6px; color: #1b2430; font-weight: 600; }
+
+/* Data, fonte e prazo: linha de informações menores */
+.vaga .meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 16px;
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--cinza-texto);
+}
+.vaga .prazo { color: #8a4b00; font-weight: 600; }
+
+/* Selo das vagas de exemplo */
+.selo-exemplo {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: #fdf0d5;
+  border: 1px solid #e0b252;
+  color: #7a4b00;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Botão que leva à vaga original */
+.botao-vaga {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin-top: 14px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: var(--verde);
+  color: var(--branco);
+  font-weight: 600;
+  text-decoration: none;
+}
+.botao-vaga:hover { background: #09563f; }
+.botao-vaga:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+
+/* Rodapé */
+.rodape {
+  max-width: 900px;
+  margin: 8px auto 0;
+  padding: 16px 16px 32px;
+  font-size: 0.85rem;
+  color: var(--cinza-texto);
+}
+
+/* ===== Página adicionar.html ===== */
+.aviso {
+  background: #fdf0d5;
+  border: 1px solid #e0b252;
+  border-radius: var(--raio);
+  padding: 12px 16px;
+  color: #5c3a00;
+}
+.formulario,
+.resultado {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  background: var(--branco);
+  border: 1px solid var(--cinza-borda);
+  border-radius: var(--raio);
+  padding: 16px;
+}
+.formulario label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--azul-escuro);
+}
+.formulario input,
+.formulario select,
+.formulario button,
+.resultado button,
+.resultado textarea {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+.formulario input,
+.formulario select,
+.resultado textarea {
+  background: var(--branco);
+  border: 1px solid #9aa5b1;
+  color: #1b2430;
+}
+.resultado textarea { font-family: ui-monospace, Consolas, monospace; font-size: 0.9rem; }
+.formulario button,
+.resultado button {
+  background: var(--azul-escuro);
+  border: 1px solid var(--azul-escuro);
+  color: var(--branco);
+  font-weight: 600;
+  cursor: pointer;
+}
+.formulario button:hover,
+.resultado button:hover { background: var(--azul); }
+.formulario input:focus-visible,
+.formulario select:focus-visible,
+.formulario button:focus-visible,
+.resultado button:focus-visible,
+.resultado textarea:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.erro { margin: 0; color: #a61b1b; font-weight: 600; }
+.erro:empty { display: none; }
+.resultado h2 { margin: 0; font-size: 1.15rem; color: var(--azul-escuro); }
+.resultado p { margin: 0; color: var(--verde); font-weight: 600; }
+.resultado ol { margin: 0; padding-left: 20px; }
 
 /* ===== Telas maiores (tablet e computador) ===== */
 @media (min-width: 640px) {
   .topo { padding: 40px 16px; }
   .topo h1 { font-size: 2rem; }
 
+  /* Três filtros lado a lado; o botão fica numa linha abaixo */
   .filtros {
-    grid-template-columns: 1fr 1fr auto;
+    grid-template-columns: repeat(3, 1fr);
     align-items: end;
     gap: 16px;
   }
-  .filtros button { width: auto; padding: 10px 24px; }
+  .filtros button { width: auto; justify-self: start; grid-column: 1 / -1; padding: 10px 24px; }
 
   .vaga { padding: 20px; }
   .vaga h2 { font-size: 1.25rem; }
-  /* No computador, cidade e data ficam lado a lado com as etiquetas */
-  .vaga .local,
-  .vaga .data { flex-basis: auto; margin-top: 0; }
-  .vaga .data::before { content: "• "; }
+  /* No computador, a cidade fica ao lado das etiquetas */
+  .vaga .local { flex-basis: auto; margin-top: 0; }
+  .botao-vaga { display: inline-flex; margin-top: 16px; padding: 10px 28px; }
+
+  .formulario { grid-template-columns: 1fr 1fr; padding: 20px; }
+  .formulario button,
+  .formulario .erro { grid-column: 1 / -1; }
+  .formulario button { width: auto; justify-self: start; padding: 10px 28px; }
+  .resultado button { width: auto; justify-self: start; padding: 10px 28px; }
+}
+
+/* Telas largas: os três filtros e o botão numa linha só */
+@media (min-width: 900px) {
+  .filtros { grid-template-columns: 1fr 1fr 1fr auto; }
+  .filtros button { grid-column: auto; justify-self: stretch; }
 }

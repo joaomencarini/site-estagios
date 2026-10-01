@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Adicionar vaga</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Adicionar vaga</h1>
+    <p>Preencha os dados e copie o texto pronto para colar em data/vagas.js.</p>
+  </header>
+
+  <main>
+    <p class="aviso">
+      <strong>Regra:</strong> coloque só os dados básicos e o link da vaga original.
+      Nunca copie a descrição completa da vaga.
+    </p>
+
+    <form id="formulario" class="formulario">
+      <label>Título da vaga
+        <input id="titulo" type="text" required placeholder="Ex.: Estágio em Análise de Crédito">
+      </label>
+
+      <label>Empresa
+        <input id="empresa" type="text" required>
+      </label>
+
+      <label>Área
+        <select id="area" required>
+          <option value="">Escolha...</option>
+          <option>Investimentos</option>
+          <option>Risco</option>
+          <option>Crédito</option>
+          <option>Controladoria</option>
+          <option>Tesouraria</option>
+          <option>Research</option>
+        </select>
+      </label>
+
+      <label>Cidade
+        <input id="cidade" type="text" required placeholder="Ex.: São Paulo">
+      </label>
+
+      <label>Tipo de empresa
+        <select id="tipoEmpresa" required>
+          <option value="">Escolha...</option>
+          <option>Banco</option>
+          <option>Corretora</option>
+          <option>Gestora</option>
+          <option>Fintech</option>
+          <option>Consultoria</option>
+          <option>Seguradora</option>
+        </select>
+      </label>
+
+      <label>Fonte (onde você encontrou a vaga)
+        <input id="fonte" type="text" required list="sugestoes-fonte" placeholder="Ex.: LinkedIn">
+        <datalist id="sugestoes-fonte">
+          <option value="LinkedIn">
+          <option value="Polifinance">
+          <option value="Site da empresa">
+        </datalist>
+      </label>
+
+      <label>Link da vaga original
+        <input id="link" type="url" required placeholder="https://...">
+      </label>
+
+      <label>Data de publicação
+        <input id="dataPublicacao" type="date" required>
+      </label>
+
+      <label>Prazo de inscrição (opcional)
+        <input id="prazoInscricao" type="date">
+      </label>
+
+      <p id="erro" class="erro" role="alert"></p>
+      <button type="submit">Gerar texto</button>
+    </form>
+
+    <section id="resultado" class="resultado" hidden>
+      <h2>Texto pronto</h2>
+      <textarea id="texto-gerado" rows="12" readonly></textarea>
+      <button id="botao-copiar" type="button">Copiar texto</button>
+      <p id="aviso-copiado" aria-live="polite"></p>
+      <ol>
+        <li>Abra o arquivo <strong>data/vagas.js</strong> no editor.</li>
+        <li>Cole o texto antes da linha final <strong>];</strong>, depois da última vaga.</li>
+        <li>Salve, abra o <strong>index.html</strong> e confira o cartão.</li>
+      </ol>
+    </section>
+
+    <p><a href="index.html">← Voltar para a lista de vagas</a></p>
+  </main>
+
+  <script src="js/adicionar.js"></script>
+</body>
+</html>

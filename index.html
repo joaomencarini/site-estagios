@@ -9,11 +9,11 @@
 <body>
   <header class="topo">
     <h1>Estágios no Mercado Financeiro</h1>
-    <p>Vagas de exemplo (fictícias) para universitários brasileiros.</p>
+    <p>Vagas de estágio para universitários brasileiros, com link para a página original de cada vaga.</p>
   </header>
 
   <main>
-    <!-- Filtros: o JavaScript preenche as opções de cidade -->
+    <!-- Filtros: o JavaScript preenche as opções de cidade e de fonte -->
     <section class="filtros" aria-label="Filtros">
       <label>Área
         <select id="filtro-area">
@@ -33,6 +33,12 @@
         </select>
       </label>
 
+      <label>Fonte
+        <select id="filtro-fonte">
+          <option value="">Todas as fontes</option>
+        </select>
+      </label>
+
       <button id="botao-limpar" type="button">Limpar filtros</button>
     </section>
 
@@ -40,6 +46,11 @@
     <p id="mensagem-vazio" hidden>Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.</p>
     <section id="lista-vagas" class="lista"></section>
   </main>
+
+  <footer class="rodape">
+    Este site apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão;
+    a candidatura é feita na página original.
+  </footer>
 
   <!-- vagas.js vem primeiro: ele cria a lista "vagas" que o app.js usa -->
   <script src="data/vagas.js"></script>

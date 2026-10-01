@@ -1,17 +1,55 @@
-// Vagas FICTÍCIAS de exemplo. Empresas e links não existem de verdade.
-// Usamos um arquivo .js (e não .json) porque o navegador bloqueia a leitura
-// de arquivos JSON quando abrimos o index.html direto, sem servidor.
+// ============================================================
+// LISTA DE VAGAS DO SITE
+//
+// Como cadastrar: abra adicionar.html, preencha o formulário, copie o texto
+// gerado e cole AQUI, antes do "];" da última linha. Passo a passo completo
+// no arquivo CLAUDE.md.
+//
+// REGRA: coloque só os dados básicos e o link da vaga original.
+// Nunca copie a descrição completa da vaga.
+//
+// Campos de cada vaga:
+//   titulo, empresa, area, cidade, tipoEmpresa, fonte, link, dataPublicacao
+//   prazoInscricao (opcional): depois dessa data a vaga some sozinha do site.
+//   exemplo: true (só nas vagas de teste abaixo): mostra o selo "EXEMPLO".
+//   Datas sempre no formato AAAA-MM-DD (ex.: 2026-10-15).
+// ============================================================
 const vagas = [
-  { id: 1,  titulo: "Estágio em Análise de Investimentos",   empresa: "Banco Horizonte",         area: "Investimentos", cidade: "São Paulo",      tipoEmpresa: "Banco",       dataPublicacao: "2026-09-29" },
-  { id: 2,  titulo: "Estágio em Gestão de Portfólio",        empresa: "Atlas Gestão de Recursos", area: "Investimentos", cidade: "Rio de Janeiro", tipoEmpresa: "Gestora",     dataPublicacao: "2026-09-22" },
-  { id: 3,  titulo: "Estágio em Risco de Mercado",           empresa: "Banco Horizonte",         area: "Risco",         cidade: "São Paulo",      tipoEmpresa: "Banco",       dataPublicacao: "2026-09-27" },
-  { id: 4,  titulo: "Estágio em Risco Operacional",          empresa: "Seguradora Prisma",       area: "Risco",         cidade: "Belo Horizonte", tipoEmpresa: "Seguradora",  dataPublicacao: "2026-09-18" },
-  { id: 5,  titulo: "Estágio em Análise de Crédito",         empresa: "Fintech Nuvem Azul",      area: "Crédito",       cidade: "São Paulo",      tipoEmpresa: "Fintech",     dataPublicacao: "2026-09-30" },
-  { id: 6,  titulo: "Estágio em Crédito Corporativo",        empresa: "Banco Meridional",        area: "Crédito",       cidade: "Porto Alegre",   tipoEmpresa: "Banco",       dataPublicacao: "2026-09-15" },
-  { id: 7,  titulo: "Estágio em Controladoria",              empresa: "Consultoria Vértice",     area: "Controladoria", cidade: "Curitiba",       tipoEmpresa: "Consultoria", dataPublicacao: "2026-09-25" },
-  { id: 8,  titulo: "Estágio em Contabilidade Financeira",   empresa: "Corretora Bússola",       area: "Controladoria", cidade: "Rio de Janeiro", tipoEmpresa: "Corretora",   dataPublicacao: "2026-09-10" },
-  { id: 9,  titulo: "Estágio em Tesouraria",                 empresa: "Banco Meridional",        area: "Tesouraria",    cidade: "Porto Alegre",   tipoEmpresa: "Banco",       dataPublicacao: "2026-09-26" },
-  { id: 10, titulo: "Estágio em Fluxo de Caixa e Liquidez",  empresa: "Fintech Nuvem Azul",      area: "Tesouraria",    cidade: "Belo Horizonte", tipoEmpresa: "Fintech",     dataPublicacao: "2026-09-20" },
-  { id: 11, titulo: "Estágio em Research de Ações",          empresa: "Corretora Bússola",       area: "Research",      cidade: "São Paulo",      tipoEmpresa: "Corretora",   dataPublicacao: "2026-09-28" },
-  { id: 12, titulo: "Estágio em Research Macroeconômico",    empresa: "Atlas Gestão de Recursos", area: "Research",      cidade: "Rio de Janeiro", tipoEmpresa: "Gestora",     dataPublicacao: "2026-09-12" }
+  // ----- VAGAS DE EXEMPLO (fictícias): apague os 3 blocos abaixo ao cadastrar vagas reais -----
+  {
+    titulo: "Estágio em Análise de Investimentos",
+    empresa: "Empresa Exemplo S.A.",
+    area: "Investimentos",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "LinkedIn",
+    link: "https://example.com/vaga-exemplo-1",
+    dataPublicacao: "2026-09-29",
+    prazoInscricao: "2030-12-31",
+    exemplo: true
+  },
+  {
+    titulo: "Estágio em Risco de Crédito",
+    empresa: "Fintech Exemplo",
+    area: "Risco",
+    cidade: "Rio de Janeiro",
+    tipoEmpresa: "Fintech",
+    fonte: "Polifinance",
+    link: "https://example.com/vaga-exemplo-2",
+    dataPublicacao: "2026-09-25",
+    exemplo: true
+  },
+  {
+    titulo: "Estágio em Controladoria",
+    empresa: "Consultoria Exemplo",
+    area: "Controladoria",
+    cidade: "Belo Horizonte",
+    tipoEmpresa: "Consultoria",
+    fonte: "Site da empresa",
+    link: "https://example.com/vaga-exemplo-3",
+    dataPublicacao: "2026-09-20",
+    prazoInscricao: "2030-06-30",
+    exemplo: true
+  },
+  // ----- FIM DOS EXEMPLOS -----
 ];
