@@ -17,15 +17,16 @@
     <details class="perfil" id="perfil">
       <summary>Meu perfil <span id="perfil-estado" class="perfil-estado"></span></summary>
       <div class="perfil-corpo">
-        <p class="perfil-ajuda">Diga o que você procura e mostramos primeiro as vagas que combinam. Fica salvo só neste navegador.</p>
+        <p class="perfil-ajuda">Diga o que você procura: mostramos só as vagas que combinam, com as mais relevantes primeiro (você pode voltar a ver todas quando quiser). Fica salvo só neste navegador.</p>
 
         <label class="perfil-texto">Seu nome (opcional)
           <input id="perfil-nome" type="text" maxlength="60" autocomplete="off" placeholder="Como podemos te chamar?">
         </label>
 
         <fieldset class="perfil-grupo">
-          <legend>Áreas de interesse</legend>
-          <div id="perfil-areas" class="opcoes"></div>
+          <legend>Categorias de área de interesse</legend>
+          <div id="perfil-categorias" class="opcoes"></div>
+          <p class="perfil-dica">Vagas de área "Diversas" aparecem em qualquer categoria marcada.</p>
         </fieldset>
 
         <fieldset class="perfil-grupo">
@@ -41,10 +42,6 @@
         <fieldset class="perfil-grupo">
           <legend>Modalidade preferida (nenhuma marcada = sem preferência)</legend>
           <div id="perfil-modalidades" class="opcoes"></div>
-          <label class="opcao opcao-filtro">
-            <input id="perfil-so-compativeis" type="checkbox" disabled>
-            <span>Só mostrar vagas compatíveis com minha modalidade</span>
-          </label>
           <p class="perfil-dica">Vagas sem modalidade informada continuam aparecendo, com a indicação "modalidade não informada".</p>
         </fieldset>
 
@@ -84,6 +81,12 @@
       <button id="botao-limpar" type="button">Limpar filtros</button>
     </section>
 
+    <!-- Faixa do filtro do perfil: mostra o que está filtrando e deixa desligar/ligar sem apagar o perfil -->
+    <div id="faixa-filtro" class="faixa-filtro" hidden>
+      <p id="faixa-texto" class="faixa-texto"></p>
+      <button id="faixa-botao" type="button" class="botao-faixa"></button>
+    </div>
+
     <div class="barra-lista">
       <p id="contador" aria-live="polite"></p>
       <label class="ordenar">Ordenar:
@@ -94,7 +97,10 @@
         </select>
       </label>
     </div>
-    <p id="mensagem-vazio" hidden>Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.</p>
+    <div id="mensagem-vazio" class="mensagem-vazio" hidden>
+      <p id="mensagem-vazio-texto"></p>
+      <button id="botao-mostrar-todas" type="button" class="botao-faixa" hidden>Mostrar todas as vagas</button>
+    </div>
     <section id="lista-vagas" class="lista"></section>
   </main>
 

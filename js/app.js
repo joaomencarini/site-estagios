@@ -6,19 +6,23 @@ const selectFonte = document.getElementById("filtro-fonte");
 const botaoLimpar = document.getElementById("botao-limpar");
 const listaVagas = document.getElementById("lista-vagas");
 const mensagemVazio = document.getElementById("mensagem-vazio");
+const textoVazio = document.getElementById("mensagem-vazio-texto");
+const botaoMostrarTodas = document.getElementById("botao-mostrar-todas");
+const faixaFiltro = document.getElementById("faixa-filtro");
+const faixaTexto = document.getElementById("faixa-texto");
+const faixaBotao = document.getElementById("faixa-botao");
 const contador = document.getElementById("contador");
 const selectOrdenar = document.getElementById("ordenar");
 const saudacao = document.getElementById("saudacao");
 const textoPadraoSaudacao = saudacao.textContent;  // texto de sempre, usado quando não há nome
 const caixaNome = document.getElementById("perfil-nome");
 const caixaModalidades = document.getElementById("perfil-modalidades");
-const caixaSoCompativeis = document.getElementById("perfil-so-compativeis");
 const caixaPalavras = document.getElementById("perfil-palavras");
 const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
 const avisoPerfil = document.getElementById("aviso-perfil");
 const estadoPerfil = document.getElementById("perfil-estado");
 const caixasPerfil = {
-  areas: document.getElementById("perfil-areas"),
+  categorias: document.getElementById("perfil-categorias"),
   cidades: document.getElementById("perfil-cidades"),
   tipos: document.getElementById("perfil-tipos")
 };
@@ -34,6 +38,7 @@ function obterArmazenamento() {
 const armazenamento = obterArmazenamento();
 let perfil = lerPerfil(armazenamento);  // regras.js: nunca dá erro, devolve perfil vazio se algo falhar
 let modoOrdem = "relevancia";
+let filtroPerfilPausado = false;  // "Mostrar todas as vagas": desliga o filtro do perfil sem apagá-lo (só nesta visita)
 
 // Transforma "2026-09-29" em "29/09/2026"
 function formatarData(dataIso) {
@@ -179,14 +184,19 @@ function criarBlocoEmail(vaga) {
 }
 
 // Monta o cartão de uma vaga. "combina" = true mostra o selo "Combina com você";
-// "avisarSemModalidade" = true (filtro de modalidade ligado) mostra "Modalidade não informada" nas vagas sem esse dado.
+// "avisarSemModalidade" = true (filtro de modalidade em ação) mostra "Modalidade não informada" nas vagas sem esse dado.
 function criarCartao(vaga, combina, avisarSemModalidade) {
   const cartao = criar("article", "vaga");
 
-  if (vaga.exemplo || combina) {
+  // Selos no alto: EXEMPLO, "Várias áreas" (área "Diversas") e "Combina com você"
+  const varias = classificarArea(vaga.area).varias;
+  if (vaga.exemplo || varias || combina) {
     const selos = criar("div", "selos");
     if (vaga.exemplo) {
       selos.appendChild(criar("span", "selo-exemplo", "EXEMPLO"));
+    }
+    if (varias) {
+      selos.appendChild(criar("span", "selo-varias", "Várias áreas"));
     }
     if (combina) {
       selos.appendChild(criar("span", "selo-combina", "Combina com você"));
@@ -240,38 +250,62 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
   return cartao;
 }
 
-// Aplica os filtros escolhidos e redesenha a lista
+// "1 vaga" / "5 vagas"
+function textoVagas(quantidade) {
+  return quantidade + (quantidade === 1 ? " vaga" : " vagas");
+}
+
+// O filtro do perfil só age se o perfil tiver algo para filtrar e não estiver desligado ("Mostrar todas as vagas")
+function filtroPerfilLigado() {
+  return perfilTemFiltro(perfil) && !filtroPerfilPausado;
+}
+
+// Faixa acima da lista: diz o que está filtrando (ou que o filtro está desligado) e tem o botão de alternar
+function mostrarFaixa(quantidade) {
+  if (!perfilTemFiltro(perfil)) {
+    faixaFiltro.hidden = true;
+    return;
+  }
+  faixaFiltro.hidden = false;
+  if (filtroPerfilPausado) {
+    faixaTexto.textContent = "Filtro do perfil desligado · " + textoVagas(quantidade);
+    faixaBotao.textContent = "Voltar a filtrar";
+  } else {
+    faixaTexto.textContent = "Filtrando por: " + descreverFiltroPerfil(perfil).join(", ") + " · " + textoVagas(quantidade);
+    faixaBotao.textContent = "Mostrar todas as vagas";
+  }
+}
+
+// Aplica os filtros e redesenha a lista. Ordem: 1) filtros da página (área, cidade, fonte);
+// 2) filtro do perfil (categorias, cidades, tipos, modalidade); 3) ordenação por relevância/data/prazo; 4) selos.
 function mostrarVagas() {
-  const area = selectArea.value;
-  const cidade = selectCidade.value;
-  const fonte = selectFonte.value;
+  const filtrosPagina = { area: selectArea.value, cidade: selectCidade.value, fonte: selectFonte.value };
+  const perfilFiltrando = filtroPerfilLigado();
+  const filtradas = filtrarVagas(vagasAtivas, filtrosPagina, perfil, perfilFiltrando);
 
-  // Vaga passa se o filtro estiver vazio OU combinar com a vaga
-  const filtradas = vagasAtivas.filter(function (vaga) {
-    const passaArea = area === "" || vaga.area === area;
-    const passaCidade = cidade === "" || vaga.cidade === cidade;
-    const passaFonte = fonte === "" || vaga.fonte === fonte;
-    return passaArea && passaCidade && passaFonte && passaFiltroModalidade(vaga, perfil);
-  });
-
-  // Ordem escolhida (relevância, mais recentes ou prazo). Sem perfil preenchido, relevância = mais recentes.
+  // Ordem escolhida (relevância, mais recentes ou prazo). A pontuação do perfil ordena o que sobrou.
   const ordenadas = ordenarVagas(filtradas, modoOrdem, perfil);
 
   listaVagas.replaceChildren();
   ordenadas.forEach(function (vaga) {
-    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil), perfil.soCompativeis));
+    // "Modalidade não informada" aparece quando o filtro de modalidade está em ação
+    const avisarSemModalidade = perfilFiltrando && perfil.modalidades.length > 0;
+    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil), avisarSemModalidade));
   });
 
-  // Mensagem diferente se não há nenhuma vaga cadastrada ou se só os filtros esvaziaram a lista
+  // Mensagem de lista vazia (cada causa tem a sua)
+  botaoMostrarTodas.hidden = true;
   if (vagasAtivas.length === 0) {
-    mensagemVazio.textContent = "Ainda não há vagas abertas cadastradas. Volte em breve!";
+    textoVazio.textContent = "Ainda não há vagas abertas cadastradas. Volte em breve!";
+  } else if (perfilFiltrando) {
+    textoVazio.textContent = "Nenhuma vaga com esses critérios. Mude o que está marcado em Meu perfil ou mostre todas as vagas.";
+    botaoMostrarTodas.hidden = false;
   } else {
-    mensagemVazio.textContent = perfil.soCompativeis
-      ? "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros ou desligar o filtro de modalidade no seu perfil."
-      : "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.";
+    textoVazio.textContent = "Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.";
   }
   mensagemVazio.hidden = filtradas.length > 0;
   contador.textContent = filtradas.length + " de " + vagasAtivas.length + " vagas";
+  mostrarFaixa(filtradas.length);
 }
 
 // ===== Meu perfil =====
@@ -290,9 +324,21 @@ function criarOpcao(caixa, valor, rotulo, marcada) {
   caixa.appendChild(etiqueta);
 }
 
-// Caixinhas de áreas, cidades ou tipos: vêm das vagas, já marcadas conforme o perfil salvo
-function criarOpcoesPerfil(campoPerfil, campoVaga) {
-  valoresUnicos(campoVaga).forEach(function (valor) {
+// Valores das caixinhas de um grupo: os que existem nas vagas MAIS os que já estão no perfil salvo
+// (assim uma opção salva nunca fica invisível e presa: sempre dá para desmarcar)
+function opcoesDoGrupo(valoresDasVagas, valoresSalvos, ordenar) {
+  const todos = valoresDasVagas.slice();
+  valoresSalvos.forEach(function (valor) {
+    if (!todos.some(function (existente) { return normalizarTexto(existente) === normalizarTexto(valor); })) {
+      todos.push(valor);
+    }
+  });
+  return ordenar(todos);
+}
+
+// Caixinhas de categorias, cidades ou tipos, já marcadas conforme o perfil salvo
+function criarOpcoesPerfil(campoPerfil, valores) {
+  valores.forEach(function (valor) {
     const marcada = perfil[campoPerfil].some(function (item) {
       return normalizarTexto(item) === normalizarTexto(valor);
     });
@@ -307,18 +353,8 @@ function criarOpcoesModalidade() {
   });
 }
 
-// O filtro de modalidade só pode ficar ligado se houver pelo menos uma modalidade marcada
-function sincronizarFiltroModalidade() {
-  const temModalidade = caixaModalidades.querySelectorAll("input:checked").length > 0;
-  caixaSoCompativeis.disabled = !temModalidade;
-  if (!temModalidade) {
-    caixaSoCompativeis.checked = false;
-  }
-}
-
 // Monta o perfil a partir do que está marcado e escrito na tela
 function lerPerfilDaTela() {
-  sincronizarFiltroModalidade();
   const novo = novoPerfil();
   Object.keys(caixasPerfil).forEach(function (campo) {
     caixasPerfil[campo].querySelectorAll("input:checked").forEach(function (marcador) {
@@ -329,7 +365,6 @@ function lerPerfilDaTela() {
     novo.modalidades.push(marcador.value);
   });
   novo.nome = caixaNome.value;
-  novo.soCompativeis = caixaSoCompativeis.checked;
   novo.palavras = caixaPalavras.value;
   return sanitizarPerfil(novo);
 }
@@ -356,6 +391,12 @@ function aoMudarPerfil() {
   mostrarVagas();
 }
 
+// Mudou uma escolha que filtra (categoria, cidade, tipo ou modalidade): o filtro volta a valer
+function aoMudarFiltroPerfil() {
+  filtroPerfilPausado = false;
+  aoMudarPerfil();
+}
+
 // "Limpar meu perfil": desmarca tudo, esvazia os campos e APAGA o que estava guardado no navegador
 function limparPerfil() {
   document.querySelectorAll("#perfil input[type=checkbox]").forEach(function (marcador) {
@@ -363,7 +404,7 @@ function limparPerfil() {
   });
   caixaNome.value = "";
   caixaPalavras.value = "";
-  sincronizarFiltroModalidade();
+  filtroPerfilPausado = false;
   perfil = novoPerfil();
   avisoPerfil.hidden = apagarPerfil(armazenamento);
   mostrarEstadoPerfil();
@@ -387,10 +428,18 @@ selectOrdenar.addEventListener("change", function () {
   mostrarVagas();
 });
 Object.keys(caixasPerfil).forEach(function (campo) {
-  caixasPerfil[campo].addEventListener("change", aoMudarPerfil);
+  caixasPerfil[campo].addEventListener("change", aoMudarFiltroPerfil);
 });
-caixaModalidades.addEventListener("change", aoMudarPerfil);
-caixaSoCompativeis.addEventListener("change", aoMudarPerfil);
+caixaModalidades.addEventListener("change", aoMudarFiltroPerfil);
+// Faixa e mensagem de lista vazia: desligar o filtro do perfil (sem apagar o perfil) ou voltar a filtrar
+faixaBotao.addEventListener("click", function () {
+  filtroPerfilPausado = !filtroPerfilPausado;
+  mostrarVagas();
+});
+botaoMostrarTodas.addEventListener("click", function () {
+  filtroPerfilPausado = true;
+  mostrarVagas();
+});
 caixaNome.addEventListener("input", aoMudarPerfil);
 caixaPalavras.addEventListener("input", aoMudarPerfil);
 botaoLimparPerfil.addEventListener("click", limparPerfil);
@@ -398,13 +447,16 @@ botaoLimparPerfil.addEventListener("click", limparPerfil);
 preencherOpcoes(selectArea, "area");
 preencherOpcoes(selectCidade, "cidade");
 preencherOpcoes(selectFonte, "fonte");
-criarOpcoesPerfil("areas", "area");
-criarOpcoesPerfil("cidades", "cidade");
-criarOpcoesPerfil("tipos", "tipoEmpresa");
+const porTextoPtBr = function (lista) {
+  return lista.sort(function (a, b) { return a.localeCompare(b, "pt-BR"); });
+};
+criarOpcoesPerfil("categorias", opcoesDoGrupo(categoriasDasVagas(vagasAtivas), perfil.categorias, function (lista) {
+  return NOMES_CATEGORIAS.filter(function (nome) { return lista.includes(nome); });  // ordem do mapa
+}));
+criarOpcoesPerfil("cidades", opcoesDoGrupo(valoresUnicos("cidade"), perfil.cidades, porTextoPtBr));
+criarOpcoesPerfil("tipos", opcoesDoGrupo(valoresUnicos("tipoEmpresa"), perfil.tipos, porTextoPtBr));
 criarOpcoesModalidade();
 caixaNome.value = perfil.nome;
-caixaSoCompativeis.checked = perfil.soCompativeis;
-sincronizarFiltroModalidade();
 caixaPalavras.value = perfil.palavras;
 mostrarSaudacao();
 avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada

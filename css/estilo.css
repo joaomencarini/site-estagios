@@ -184,7 +184,6 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   color: #1b2430;
 }
 .perfil-texto input:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
-.opcao-filtro { margin-top: 10px; }
 .opcao input:disabled + span { color: var(--cinza-texto); }
 .opcao:has(input:disabled) { background: #f3f5f7; cursor: not-allowed; }
 .perfil-dica { margin: 8px 0 0; font-size: 0.85rem; color: var(--cinza-texto); }
@@ -220,6 +219,39 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   text-align: center;
   color: var(--cinza-texto);
 }
+
+/* Faixa "Filtrando por: ..." (filtro do perfil) e botões dela */
+.faixa-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 16px;
+  padding: 10px 14px;
+  background: #e4edf5;
+  border: 1px solid var(--azul);
+  border-radius: var(--raio);
+}
+.faixa-filtro[hidden] { display: none; }
+.faixa-texto { flex: 1 1 220px; margin: 0; font-size: 0.95rem; font-weight: 600; color: var(--azul-escuro); }
+.botao-faixa {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--branco);
+  border: 1px solid var(--azul);
+  border-radius: 8px;
+  color: var(--azul-escuro);
+  cursor: pointer;
+}
+.botao-faixa:hover { background: #d7e5f2; }
+.botao-faixa:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.botao-faixa[hidden] { display: none; }
+.mensagem-vazio p { margin: 0 0 12px; }
+.mensagem-vazio button { margin: 0 auto; }
 
 /* ===== Cartões de vaga ===== */
 .lista { display: grid; gap: 12px; }
@@ -283,6 +315,17 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 /* Selo das vagas de exemplo */
 /* Selos no alto do cartão (EXEMPLO e "Combina com você") */
 .selos { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+.selo-varias {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 4px;
+  background: #eef1f4;
+  border: 1px solid #9aa5b1;
+  color: #2b3643;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
 .selo-combina {
   display: inline-block;
   padding: 2px 10px;

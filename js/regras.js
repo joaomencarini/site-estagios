@@ -84,6 +84,64 @@ function modalidadeDaVaga(vaga) {
   return vaga ? modalidadePadrao(vaga.modalidade) : "";
 }
 
+// ----- Categorias de área -----
+// As áreas das vagas são muito variadas ("M&A", "Investment Banking", "DCM"...). Para o perfil e o filtro,
+// cada área é agrupada em uma categoria. O casamento é por TEXTO NORMALIZADO (sem acento, minúsculas)
+// e por "contém": a área tem de conter um dos termos. Vale a PRIMEIRA categoria (na ordem abaixo) que casar.
+// Para ensinar uma área nova ao mapa, acrescente o termo (ou um bloco novo) aqui e rode `node --test`.
+// Isto NÃO altera data/vagas.js nem data/vagas-auto.js: a área original continua aparecendo no cartão.
+const CATEGORIA_OUTRAS = "Outras";
+const CATEGORIAS_AREA = [
+  { nome: "Investimentos e Gestão", termos: ["asset management", "investimentos", "fund management", "special situations", "venture capital", "private equity", "real estate", "infraestrutura"] },
+  { nome: "Banco de Investimento e M&A", termos: ["m&a", "investment banking", "dcm", "project finance", "capital solutions"] },
+  { nome: "Risco e Crédito", termos: ["risco", "credito", "controle e risco", "cobranca"] },
+  { nome: "Operações e Backoffice", termos: ["operacoes", "operations", "backoffice", "middle office", "mesa de operacoes"] },
+  { nome: "Research", termos: ["equity research", "equities", "research"] },
+  { nome: "Comercial e Wealth", termos: ["comercial", "wealth", "multi-family office"] }
+];
+const NOMES_CATEGORIAS = CATEGORIAS_AREA.map(function (categoria) { return categoria.nome; }).concat([CATEGORIA_OUTRAS]);
+
+// Área "Diversas", "Diversas Áreas" ou "Diversas (...)": serve para várias categorias
+function ehAreaVaria(area) {
+  return /^diversas(?![a-z0-9])/.test(normalizarTexto(area));
+}
+
+// Classifica uma área: { categoria, varias }.
+// "Diversas..." => varias: true (compatível com QUALQUER categoria, e sem categoria própria);
+// área que não casa com nenhum termo => "Outras".
+function classificarArea(area) {
+  if (ehAreaVaria(area)) {
+    return { categoria: "", varias: true };
+  }
+  const texto = normalizarTexto(area);
+  for (let i = 0; i < CATEGORIAS_AREA.length; i++) {
+    const achou = CATEGORIAS_AREA[i].termos.some(function (termo) { return texto.includes(normalizarTexto(termo)); });
+    if (achou) {
+      return { categoria: CATEGORIAS_AREA[i].nome, varias: false };
+    }
+  }
+  return { categoria: CATEGORIA_OUTRAS, varias: false };
+}
+
+// Nome oficial da categoria ("risco e credito" vira "Risco e Crédito"), ou "" se não existir
+function categoriaOficial(texto) {
+  const alvo = normalizarTexto(texto);
+  const achada = NOMES_CATEGORIAS.find(function (nome) { return normalizarTexto(nome) === alvo; });
+  return achada || "";
+}
+
+// Categorias que existem nas vagas dadas (fora as "Diversas"), na ordem do mapa, para montar o painel
+function categoriasDasVagas(lista) {
+  const presentes = [];
+  lista.forEach(function (vaga) {
+    const classe = classificarArea(vaga.area);
+    if (!classe.varias && !presentes.includes(classe.categoria)) {
+      presentes.push(classe.categoria);
+    }
+  });
+  return NOMES_CATEGORIAS.filter(function (nome) { return presentes.includes(nome); });
+}
+
 // Nome para exibir: sem caracteres de controle, espaços sobrando removidos, no máximo 60 caracteres.
 // O resultado é só texto: quem exibe deve usar textContent, nunca HTML.
 function limparNome(texto) {
@@ -96,7 +154,7 @@ function limparNome(texto) {
 
 // Perfil vazio: nada escolhido
 function novoPerfil() {
-  return { nome: "", areas: [], cidades: [], tipos: [], modalidades: [], soCompativeis: false, palavras: "" };
+  return { nome: "", categorias: [], cidades: [], tipos: [], modalidades: [], palavras: "" };
 }
 
 // Garante que o perfil tenha o formato certo (também protege contra dados estranhos guardados no navegador)
@@ -105,12 +163,22 @@ function sanitizarPerfil(bruto) {
   if (!bruto || typeof bruto !== "object") {
     return perfil;
   }
-  ["areas", "cidades", "tipos"].forEach(function (campo) {
+  ["cidades", "tipos"].forEach(function (campo) {
     if (Array.isArray(bruto[campo])) {
       perfil[campo] = bruto[campo]
         .filter(function (item) { return typeof item === "string" && item.trim() !== ""; })
         .map(function (item) { return item.trim().slice(0, 100); })
         .slice(0, 60);
+    }
+  });
+  // Categorias de área (só nomes que existem no mapa, sem repetir). Perfil antigo guardava as áreas cruas
+  // em "areas": convertemos cada uma para a sua categoria (as "Diversas" não têm categoria).
+  const origemCategorias = Array.isArray(bruto.categorias) ? bruto.categorias
+    : (Array.isArray(bruto.areas) ? bruto.areas.map(function (area) { return classificarArea(area).categoria; }) : []);
+  origemCategorias.forEach(function (item) {
+    const nome = categoriaOficial(item);
+    if (nome !== "" && !perfil.categorias.includes(nome)) {
+      perfil.categorias.push(nome);
     }
   });
   if (typeof bruto.palavras === "string") {
@@ -125,8 +193,6 @@ function sanitizarPerfil(bruto) {
       }
     });
   }
-  // O filtro de modalidade só faz sentido se houver pelo menos uma modalidade preferida
-  perfil.soCompativeis = bruto.soCompativeis === true && perfil.modalidades.length > 0;
   return perfil;
 }
 
@@ -143,11 +209,11 @@ function palavrasChave(perfil) {
   return lista;
 }
 
-// Sem nenhuma área, cidade, tipo, modalidade ou palavra-chave.
+// Sem nenhuma categoria, cidade, tipo, modalidade ou palavra-chave.
 // (O nome não conta: ele só personaliza a saudação e não muda a ordem das vagas.)
 function perfilVazio(perfil) {
   const p = sanitizarPerfil(perfil);
-  return p.areas.length === 0 && p.cidades.length === 0 && p.tipos.length === 0 &&
+  return p.categorias.length === 0 && p.cidades.length === 0 && p.tipos.length === 0 &&
     p.modalidades.length === 0 && palavrasChave(p).length === 0;
 }
 
@@ -157,14 +223,16 @@ function estaNaLista(lista, valor) {
 }
 
 // Pontuação de uma vaga para um perfil:
-// área igual a um interesse +3, cidade +2, tipo de empresa +1, palavra-chave no título ou na empresa +2
+// categoria da área igual a um interesse +3 (vaga "Diversas" não ganha esses pontos: ela passa no filtro
+// de categoria, mas não tem categoria própria), cidade +2, tipo de empresa +1, palavra-chave no título ou na empresa +2
 // (a palavra-chave vale uma vez só, mesmo que várias apareçam) e modalidade igual a uma preferida +2.
 // Vaga com modalidade diferente das preferidas, ou sem modalidade informada, ganha 0 nesse critério
 // (nunca é escondida por isso).
 function pontuarVaga(vaga, perfil) {
   const p = sanitizarPerfil(perfil);
   let pontos = 0;
-  if (estaNaLista(p.areas, vaga.area)) {
+  const classe = classificarArea(vaga.area);
+  if (!classe.varias && estaNaLista(p.categorias, classe.categoria)) {
     pontos += PESOS.area;
   }
   if (estaNaLista(p.cidades, vaga.cidade)) {
@@ -185,25 +253,68 @@ function pontuarVaga(vaga, perfil) {
 }
 
 // Maior pontuação possível, considerando só o que o usuário preencheu.
-// Se uma vaga for informada e ela não tiver modalidade, o critério "modalidade" fica fora da conta:
-// ela não pode ganhar esses pontos e por isso não é prejudicada por quem prefere uma modalidade.
+// Se uma vaga for informada, os critérios que ela não pode cumprir ficam fora da conta, para não prejudicá-la:
+// sem modalidade informada não conta "modalidade", e área "Diversas" não conta "categoria".
 function pontuacaoMaxima(perfil, vaga) {
   const p = sanitizarPerfil(perfil);
   const contaModalidade = p.modalidades.length > 0 && (vaga === undefined || modalidadeDaVaga(vaga) !== "");
-  return (p.areas.length > 0 ? PESOS.area : 0) + (p.cidades.length > 0 ? PESOS.cidade : 0) +
+  const contaCategoria = p.categorias.length > 0 && (vaga === undefined || !classificarArea(vaga.area).varias);
+  return (contaCategoria ? PESOS.area : 0) + (p.cidades.length > 0 ? PESOS.cidade : 0) +
     (p.tipos.length > 0 ? PESOS.tipo : 0) + (palavrasChave(p).length > 0 ? PESOS.palavra : 0) +
     (contaModalidade ? PESOS.modalidade : 0);
 }
 
-// Filtro opcional "só vagas compatíveis com minha modalidade". Desligado: todas passam.
-// Ligado: passa quem tem modalidade preferida E quem não informa modalidade (essas nunca somem).
-function passaFiltroModalidade(vaga, perfil) {
+// ----- Filtro do perfil -----
+// Cada grupo marcado (categorias, cidades, tipos de empresa, modalidades) filtra a lista:
+// a vaga precisa bater em pelo menos UMA opção de cada grupo marcado. Grupo sem nada marcado não filtra.
+// Exceções: vaga de área "Diversas" passa em qualquer categoria; vaga sem modalidade informada passa
+// no grupo modalidade (nunca some por falta desse dado). Palavras-chave NÃO filtram, só pontuam.
+function perfilTemFiltro(perfil) {
   const p = sanitizarPerfil(perfil);
-  if (!p.soCompativeis) {
-    return true;
+  return p.categorias.length > 0 || p.cidades.length > 0 || p.tipos.length > 0 || p.modalidades.length > 0;
+}
+
+function passaFiltroPerfil(vaga, perfil) {
+  const p = sanitizarPerfil(perfil);
+  if (p.categorias.length > 0) {
+    const classe = classificarArea(vaga.area);
+    if (!classe.varias && !estaNaLista(p.categorias, classe.categoria)) {
+      return false;
+    }
   }
-  const modalidade = modalidadeDaVaga(vaga);
-  return modalidade === "" || p.modalidades.includes(modalidade);
+  if (p.cidades.length > 0 && !estaNaLista(p.cidades, vaga.cidade)) {
+    return false;
+  }
+  if (p.tipos.length > 0 && !estaNaLista(p.tipos, vaga.tipoEmpresa)) {
+    return false;
+  }
+  if (p.modalidades.length > 0) {
+    const modalidade = modalidadeDaVaga(vaga);
+    if (modalidade !== "" && !p.modalidades.includes(modalidade)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Textos da faixa "Filtrando por: ...": categorias, cidades, tipos e modalidades marcados
+function descreverFiltroPerfil(perfil) {
+  const p = sanitizarPerfil(perfil);
+  return p.categorias.concat(p.cidades, p.tipos, p.modalidades.map(function (m) { return ROTULOS_MODALIDADE[m]; }));
+}
+
+// Filtros da própria página: área, cidade e fonte (valor vazio = não filtra)
+function passaFiltrosPagina(vaga, filtros) {
+  const f = filtros || {};
+  return (!f.area || vaga.area === f.area) && (!f.cidade || vaga.cidade === f.cidade) && (!f.fonte || vaga.fonte === f.fonte);
+}
+
+// Ordem de aplicação: 1) filtros da página (área, cidade, fonte); 2) filtro do perfil, se "aplicarPerfil".
+// A ordenação (ordenarVagas) e os selos vêm depois, sobre o que sobrou.
+function filtrarVagas(lista, filtrosPagina, perfil, aplicarPerfil) {
+  return lista.filter(function (vaga) {
+    return passaFiltrosPagina(vaga, filtrosPagina) && (!aplicarPerfil || passaFiltroPerfil(vaga, perfil));
+  });
 }
 
 // Mostra o selo "Combina com você"? Só com perfil preenchido e pontuação alta.
@@ -288,8 +399,9 @@ function salvarPerfil(armazenamento, perfil) {
 // No Node (scripts) exporta as funções; no navegador elas já ficam disponíveis direto
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo, emailValido,
-    PESOS, LIMITE_COMBINA, CHAVE_PERFIL, TAMANHO_MAXIMO_NOME, MODALIDADES, ROTULOS_MODALIDADE, normalizarTexto,
-    modalidadePadrao, modalidadeDaVaga, limparNome, novoPerfil, sanitizarPerfil, palavrasChave, perfilVazio,
-    pontuarVaga, pontuacaoMaxima, passaFiltroModalidade, combinaComPerfil, ordenarVagas, lerPerfil, salvarPerfil,
-    apagarPerfil };
+    PESOS, LIMITE_COMBINA, CHAVE_PERFIL, TAMANHO_MAXIMO_NOME, MODALIDADES, ROTULOS_MODALIDADE, CATEGORIA_OUTRAS,
+    CATEGORIAS_AREA, NOMES_CATEGORIAS, normalizarTexto, ehAreaVaria, classificarArea, categoriaOficial,
+    categoriasDasVagas, modalidadePadrao, modalidadeDaVaga, limparNome, novoPerfil, sanitizarPerfil, palavrasChave,
+    perfilVazio, pontuarVaga, pontuacaoMaxima, perfilTemFiltro, passaFiltroPerfil, descreverFiltroPerfil,
+    passaFiltrosPagina, filtrarVagas, combinaComPerfil, ordenarVagas, lerPerfil, salvarPerfil, apagarPerfil };
 }
