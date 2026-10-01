@@ -1,0 +1,68 @@
+/* Estilo simples e legível */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f4f6f8;
+  color: #1f2933;
+}
+
+.topo {
+  background: #0b3d5c;
+  color: #fff;
+  padding: 24px 16px;
+  text-align: center;
+}
+.topo h1 { margin: 0 0 8px; font-size: 1.6rem; }
+.topo p { margin: 0; opacity: 0.9; }
+
+main { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+/* Área dos filtros */
+.filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.filtros label { display: flex; flex-direction: column; gap: 4px; font-weight: bold; font-size: 0.9rem; }
+.filtros select, .filtros button { font-size: 1rem; padding: 8px 10px; }
+.filtros select { min-width: 180px; }
+.filtros button {
+  background: #e4e7eb;
+  border: 1px solid #b0b8c1;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.filtros button:hover { background: #d2d6db; }
+
+#contador { margin: 16px 0 8px; color: #52606d; }
+#mensagem-vazio {
+  background: #fff3cd;
+  border: 1px solid #e0c870;
+  padding: 16px;
+  border-radius: 8px;
+}
+
+/* Cartões das vagas */
+.lista { display: grid; gap: 12px; }
+.vaga {
+  background: #fff;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.vaga h2 { margin: 0 0 4px; font-size: 1.1rem; }
+.vaga .empresa { margin: 0 0 8px; color: #52606d; }
+.vaga .detalhes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.9rem; }
+.etiqueta {
+  background: #dbeafe;
+  color: #0b3d5c;
+  padding: 2px 8px;
+  border-radius: 12px;
+}

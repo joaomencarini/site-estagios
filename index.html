@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estágios no Mercado Financeiro</title>
+  <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+  <header class="topo">
+    <h1>Estágios no Mercado Financeiro</h1>
+    <p>Vagas de exemplo (fictícias) para universitários brasileiros.</p>
+  </header>
+
+  <main>
+    <!-- Filtros: o JavaScript preenche as opções de cidade -->
+    <section class="filtros" aria-label="Filtros">
+      <label>Área
+        <select id="filtro-area">
+          <option value="">Todas as áreas</option>
+          <option>Investimentos</option>
+          <option>Risco</option>
+          <option>Crédito</option>
+          <option>Controladoria</option>
+          <option>Tesouraria</option>
+          <option>Research</option>
+        </select>
+      </label>
+
+      <label>Cidade
+        <select id="filtro-cidade">
+          <option value="">Todas as cidades</option>
+        </select>
+      </label>
+
+      <button id="botao-limpar" type="button">Limpar filtros</button>
+    </section>
+
+    <p id="contador" aria-live="polite"></p>
+    <p id="mensagem-vazio" hidden>Nenhuma vaga encontrada com esses filtros. Tente limpar os filtros.</p>
+    <section id="lista-vagas" class="lista"></section>
+  </main>
+
+  <!-- vagas.js vem primeiro: ele cria a lista "vagas" que o app.js usa -->
+  <script src="data/vagas.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
