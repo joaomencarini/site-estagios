@@ -29,15 +29,18 @@
       </label>
 
       <label>Área
-        <select id="area" required>
-          <option value="">Escolha...</option>
-          <option>Investimentos</option>
-          <option>Risco</option>
-          <option>Crédito</option>
-          <option>Controladoria</option>
-          <option>Tesouraria</option>
-          <option>Research</option>
-        </select>
+        <input id="area" type="text" required list="sugestoes-area" placeholder="Ex.: Investment Banking">
+        <datalist id="sugestoes-area">
+          <option value="Investimentos">
+          <option value="Investment Banking">
+          <option value="Risco">
+          <option value="Crédito">
+          <option value="Controladoria">
+          <option value="Tesouraria">
+          <option value="Research">
+          <option value="Asset Management">
+          <option value="Operações">
+        </datalist>
       </label>
 
       <label>Cidade
@@ -53,6 +56,7 @@
           <option>Fintech</option>
           <option>Consultoria</option>
           <option>Seguradora</option>
+          <option>Outro</option>
         </select>
       </label>
 
@@ -65,8 +69,8 @@
         </datalist>
       </label>
 
-      <label>Link da vaga original
-        <input id="link" type="url" required placeholder="https://...">
+      <label>Link da vaga original (deixe vazio se a candidatura for por e-mail)
+        <input id="link" type="url" placeholder="https://...">
       </label>
 
       <label>Data de publicação

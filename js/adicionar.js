@@ -39,7 +39,7 @@ formulario.addEventListener("submit", function (evento) {
     prazoInscricao: ler("prazoInscricao")
   };
 
-  if (!/^https?:\/\//i.test(vaga.link)) {
+  if (vaga.link !== "" && !/^https?:\/\//i.test(vaga.link)) {
     erro.textContent = "O link precisa começar com http:// ou https://";
     return;
   }

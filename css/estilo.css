@@ -197,6 +197,18 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 .botao-vaga:hover { background: #09563f; }
 .botao-vaga:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
 
+/* Aviso no lugar do botão, quando a vaga não tem link */
+.sem-link {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #eef1f4;
+  border: 1px solid var(--cinza-borda);
+  color: #2b3643;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
 /* Rodapé */
 .rodape {
   max-width: 900px;

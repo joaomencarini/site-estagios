@@ -33,7 +33,7 @@ function linkSeguro(link) {
   return typeof link === "string" && /^https?:\/\//i.test(link);
 }
 
-// Cria as opções de um filtro (cidade ou fonte) a partir das vagas ativas, sem repetir
+// Cria as opções de um filtro (área, cidade ou fonte) a partir das vagas ativas, sem repetir
 function preencherOpcoes(select, campo) {
   const valores = [];
   vagasAtivas.forEach(function (vaga) {
@@ -90,8 +90,11 @@ function criarCartao(vaga) {
   }
   cartao.appendChild(meta);
 
-  // Botão que abre a vaga original em outra aba
-  if (linkSeguro(vaga.link)) {
+  if (!vaga.link) {
+    // Sem link: a candidatura não é feita por página, então mostramos um aviso no lugar do botão
+    cartao.appendChild(criar("p", "sem-link", "Candidatura por e-mail: veja o alerta da Polifinance"));
+  } else if (linkSeguro(vaga.link)) {
+    // Botão que abre a vaga original em outra aba
     const botao = criar("a", "botao-vaga", "Ver vaga e se candidatar");
     botao.href = vaga.link;
     botao.target = "_blank";
@@ -148,6 +151,7 @@ selectCidade.addEventListener("change", mostrarVagas);
 selectFonte.addEventListener("change", mostrarVagas);
 botaoLimpar.addEventListener("click", limparFiltros);
 
+preencherOpcoes(selectArea, "area");
 preencherOpcoes(selectCidade, "cidade");
 preencherOpcoes(selectFonte, "fonte");
 mostrarVagas();
