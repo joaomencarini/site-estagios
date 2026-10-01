@@ -1,68 +1,178 @@
-/* Estilo simples e legível */
+/* ===== Cores e medidas (mude aqui para trocar a identidade visual) ===== */
+:root {
+  --azul-escuro: #0f2a43;   /* topo e títulos */
+  --azul: #1d4e7a;          /* destaques e foco */
+  --verde: #0b6b4f;         /* área da vaga */
+  --fundo: #f3f5f7;         /* fundo da página */
+  --branco: #ffffff;
+  --cinza-texto: #4a5663;   /* textos secundários */
+  --cinza-borda: #d3d9df;
+  --raio: 10px;
+}
+
+/* ===== Base ===== */
 * { box-sizing: border-box; }
 
 body {
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f4f6f8;
-  color: #1f2933;
+  /* Fonte do sistema: carrega na hora e não precisa de internet */
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  background: var(--fundo);
+  color: #1b2430;
+  overflow-wrap: anywhere; /* evita que palavras longas criem rolagem horizontal */
 }
 
+/* ===== Topo ===== */
 .topo {
-  background: #0b3d5c;
-  color: #fff;
-  padding: 24px 16px;
-  text-align: center;
+  background: var(--azul-escuro);
+  color: var(--branco);
+  padding: 28px 16px;
 }
-.topo h1 { margin: 0 0 8px; font-size: 1.6rem; }
-.topo p { margin: 0; opacity: 0.9; }
+.topo h1 {
+  max-width: 868px; /* 900px do conteúdo menos 2x16px de margem: alinha com os cartões */
+  margin: 0 auto 6px;
+  font-size: 1.5rem;
+  line-height: 1.25;
+}
+.topo p {
+  max-width: 868px;
+  margin: 0 auto;
+  color: #c5d3e0;
+  font-size: 0.95rem;
+}
 
 main { max-width: 900px; margin: 0 auto; padding: 16px; }
 
-/* Área dos filtros */
+/* ===== Filtros: um embaixo do outro no celular ===== */
 .filtros {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: flex-end;
-  background: #fff;
+  display: grid;
+  gap: 14px;
+  background: var(--branco);
+  border: 1px solid var(--cinza-borda);
+  border-radius: var(--raio);
   padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-.filtros label { display: flex; flex-direction: column; gap: 4px; font-weight: bold; font-size: 0.9rem; }
-.filtros select, .filtros button { font-size: 1rem; padding: 8px 10px; }
-.filtros select { min-width: 180px; }
+.filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--azul-escuro);
+}
+/* 16px evita que o iPhone dê zoom ao tocar no campo; 48px de altura facilita o toque */
+.filtros select,
 .filtros button {
-  background: #e4e7eb;
-  border: 1px solid #b0b8c1;
-  border-radius: 4px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  border-radius: 8px;
+}
+.filtros select {
+  background: var(--branco);
+  border: 1px solid #9aa5b1;
+  color: #1b2430;
+}
+.filtros button {
+  background: var(--azul-escuro);
+  border: 1px solid var(--azul-escuro);
+  color: var(--branco);
+  font-weight: 600;
   cursor: pointer;
 }
-.filtros button:hover { background: #d2d6db; }
+.filtros button:hover { background: var(--azul); }
+.filtros select:focus-visible,
+.filtros button:focus-visible {
+  outline: 3px solid var(--azul);
+  outline-offset: 2px;
+}
 
-#contador { margin: 16px 0 8px; color: #52606d; }
+/* ===== Contador e aviso de lista vazia ===== */
+#contador {
+  margin: 20px 0 10px;
+  color: var(--cinza-texto);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
 #mensagem-vazio {
-  background: #fff3cd;
-  border: 1px solid #e0c870;
-  padding: 16px;
-  border-radius: 8px;
+  background: var(--branco);
+  border: 1px dashed #9aa5b1;
+  border-radius: var(--raio);
+  padding: 20px 16px;
+  text-align: center;
+  color: var(--cinza-texto);
 }
 
-/* Cartões das vagas */
+/* ===== Cartões de vaga ===== */
 .lista { display: grid; gap: 12px; }
+
 .vaga {
-  background: #fff;
+  background: var(--branco);
+  border: 1px solid var(--cinza-borda);
+  border-left: 5px solid var(--azul);
+  border-radius: var(--raio);
   padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
-.vaga h2 { margin: 0 0 4px; font-size: 1.1rem; }
-.vaga .empresa { margin: 0 0 8px; color: #52606d; }
-.vaga .detalhes { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 0.9rem; }
+.vaga h2 {
+  margin: 0 0 2px;
+  font-size: 1.15rem;
+  line-height: 1.3;
+  color: var(--azul-escuro);
+}
+.vaga .empresa {
+  margin: 0 0 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cinza-texto);
+}
+.vaga .detalhes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--cinza-texto);
+}
+
+/* Etiquetas: a primeira (área) é verde, a segunda (tipo de empresa) é cinza */
 .etiqueta {
-  background: #dbeafe;
-  color: #0b3d5c;
-  padding: 2px 8px;
-  border-radius: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #e6e9ed;
+  color: #2b3643;
+}
+.etiqueta:first-child {
+  background: #dcf1ea;
+  color: var(--verde);
+}
+
+/* Cidade e data ficam em linha própria, abaixo das etiquetas */
+.vaga .local,
+.vaga .data { flex-basis: 100%; }
+.vaga .local { margin-top: 6px; color: #1b2430; font-weight: 600; }
+
+/* ===== Telas maiores (tablet e computador) ===== */
+@media (min-width: 640px) {
+  .topo { padding: 40px 16px; }
+  .topo h1 { font-size: 2rem; }
+
+  .filtros {
+    grid-template-columns: 1fr 1fr auto;
+    align-items: end;
+    gap: 16px;
+  }
+  .filtros button { width: auto; padding: 10px 24px; }
+
+  .vaga { padding: 20px; }
+  .vaga h2 { font-size: 1.25rem; }
+  /* No computador, cidade e data ficam lado a lado com as etiquetas */
+  .vaga .local,
+  .vaga .data { flex-basis: auto; margin-top: 0; }
+  .vaga .data::before { content: "• "; }
 }

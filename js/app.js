@@ -49,9 +49,16 @@ function criarCartao(vaga) {
     etiqueta.textContent = texto;
     detalhes.appendChild(etiqueta);
   });
+  // Cidade e data em elementos separados, para o CSS poder dar destaque a cada um
   const local = document.createElement("span");
-  local.textContent = vaga.cidade + " • Publicada em " + formatarData(vaga.dataPublicacao);
+  local.className = "local";
+  local.textContent = vaga.cidade;
   detalhes.appendChild(local);
+
+  const data = document.createElement("span");
+  data.className = "data";
+  data.textContent = "Publicada em " + formatarData(vaga.dataPublicacao);
+  detalhes.appendChild(data);
 
   cartao.append(titulo, empresa, detalhes);
   return cartao;
