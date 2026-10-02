@@ -622,3 +622,50 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   .cand-linha { grid-template-columns: 1fr auto; align-items: center; }
   .janela-conteudo { padding: 20px; }
 }
+
+/* ===== Reescrever currículo (Etapa 9c) ===== */
+.botao-reescrever { margin-top: 0; justify-self: start; }
+.re-original { margin: 0; padding: 10px 12px; max-height: 240px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; background: #f3f5f7; border: 1px solid var(--cinza-borda); border-radius: 8px; font: inherit; font-size: 0.9rem; }
+.re-lacunas { padding: 12px; background: #fdf6e3; border: 1px solid #e6d29a; border-radius: 8px; }
+.re-lacunas ul { margin: 8px 0 0; padding-left: 20px; }
+
+/* A "folha" do currículo: na tela fica com cara de página A4; na impressão é só o conteúdo */
+.cv-pagina {
+  width: 100%;
+  max-width: 210mm;
+  margin: 8px auto 12px;
+  padding: 16px;
+  background: #fff;
+  color: #000;
+  border: 1px solid #9aa5b1;
+  box-shadow: 0 2px 8px rgba(15, 42, 67, 0.25);
+  font-family: Calibri, Carlito, Arial, Helvetica, sans-serif;
+  font-size: 10.5pt;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.cv-pagina:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.cv-pagina h1 { margin: 0 0 2px; font-size: 16pt; font-weight: 700; text-align: center; color: #000; }
+.cv-pagina .cv-contato { margin: 0 0 8px; text-align: center; }
+.cv-pagina h2 { margin: 10px 0 4px; padding-bottom: 1px; font-size: 11pt; font-weight: 700; color: #000; border-bottom: 1px solid #000; }
+.cv-pagina p { margin: 0 0 4px; }
+.cv-pagina .cv-subtitulo { margin-top: 4px; font-weight: 700; }
+.cv-pagina ul { margin: 0 0 4px; padding-left: 18px; list-style: disc; }
+.cv-pagina li { margin: 0 0 2px; }
+.cv-medida { position: absolute; left: -10000px; top: 0; width: 174mm; visibility: hidden; pointer-events: none; }
+#area-impressao { display: none; }
+@media (min-width: 640px) {
+  .cv-pagina { padding: 15mm 18mm; min-height: 297mm; }
+}
+@media print {
+  @page { size: A4; margin: 15mm 18mm; }
+  /* só enquanto "Baixar PDF" está imprimindo: esconde o site inteiro e deixa só a página do currículo */
+  body.imprimindo-cv > *:not(#area-impressao) { display: none !important; }
+  body.imprimindo-cv #area-impressao { display: block !important; }
+  body.imprimindo-cv, html:has(body.imprimindo-cv) { background: #fff !important; margin: 0; padding: 0; }
+  body.imprimindo-cv #area-impressao .cv-pagina { max-width: none; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; }
+  body.imprimindo-cv #area-impressao h2 { break-after: avoid; }
+  body.imprimindo-cv #area-impressao li, body.imprimindo-cv #area-impressao p { break-inside: avoid; }
+}
+.cv-medida .cv-pagina { max-width: none; width: auto; min-height: 0; margin: 0; padding: 0; border: 0; box-shadow: none; }
+#janela-reescrita { width: min(860px, calc(100vw - 24px)); }

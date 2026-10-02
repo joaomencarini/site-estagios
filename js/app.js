@@ -24,6 +24,22 @@ const mensagemPerfil = document.getElementById("perfil-mensagem");
 const botaoExportar = document.getElementById("botao-exportar-perfil");
 const botaoImportar = document.getElementById("botao-importar-perfil");
 const arquivoPerfil = document.getElementById("arquivo-perfil");
+const janelaRe = document.getElementById("janela-reescrita");
+const reVaga = document.getElementById("re-vaga");
+const reSemCurriculo = document.getElementById("re-sem-curriculo");
+const reComCurriculo = document.getElementById("re-com-curriculo");
+const rePrompt = document.getElementById("re-prompt");
+const reResposta = document.getElementById("re-resposta");
+const reAviso = document.getElementById("re-aviso");
+const reOriginal = document.getElementById("re-original");
+const reOriginalTexto = document.getElementById("re-original-texto");
+const reResultado = document.getElementById("re-resultado");
+const rePagina = document.getElementById("re-pagina");
+const reAvisoPagina = document.getElementById("re-aviso-pagina");
+const reLacunas = document.getElementById("re-lacunas");
+const reLacunasLista = document.getElementById("re-lacunas-lista");
+const areaImpressao = document.getElementById("area-impressao");
+const medidaCv = document.getElementById("medida-cv");
 const botaoAnexar = document.getElementById("botao-anexar-curriculo");
 const arquivoCurriculo = document.getElementById("arquivo-curriculo");
 const blocoArquivo = document.getElementById("arquivo-guardado");
@@ -54,6 +70,8 @@ const candMensagem = document.getElementById("cand-mensagem");
 let arquivoGuardado = null;  // currículo em arquivo: { nome, tipo, tamanho, data, conteudo (ArrayBuffer) } ou null
 let arquivoNoBanco = false;  // true se esse arquivo também está guardado no IndexedDB
 let arquivoParaCompartilhar = null;  // File pronto para navigator.share (só existe se o navegador suportar)
+let vagaReescrita = null;  // vaga da janela "Reescrever currículo" aberta agora
+let tituloAntesImpressao = null;  // título da página guardado enquanto o PDF é impresso
 let vagaEmPreparo = null;  // vaga da janela "Preparar candidatura" aberta agora
 const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
 const avisoPerfil = document.getElementById("aviso-perfil");
@@ -312,6 +330,12 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
     preparar.addEventListener("click", function () { abrirJanelaCandidatura(vaga); });
     acoes.appendChild(preparar);
   }
+  // "Reescrever currículo para esta vaga": em todas as vagas (a IA usa a área e o tipo da vaga)
+  const reescrever = criar("button", "botao-secundario botao-reescrever", "Reescrever currículo para esta vaga");
+  reescrever.type = "button";
+  reescrever.setAttribute("aria-haspopup", "dialog");
+  reescrever.addEventListener("click", function () { abrirJanelaReescrita(vaga); });
+  acoes.appendChild(reescrever);
   if (acoes.children.length > 0) {
     cartao.appendChild(acoes);
   }
@@ -797,6 +821,199 @@ function fecharJanelaCandidatura() {
   }
 }
 
+// ===== Janela "Reescrever currículo para esta vaga" =====
+
+// Muda o texto e o estilo da mensagem da janela: tipo "aviso" (amarelo) ou "erro" (vermelho)
+function mostrarAvisoReescrita(texto, tipo) {
+  reAviso.hidden = texto === "";
+  reAviso.textContent = texto;
+  reAviso.className = tipo === "erro" ? "perfil-mensagem perfil-mensagem-erro" : "aviso-perfil";
+}
+
+function limparResultadoReescrita() {
+  mostrarAvisoReescrita("", "aviso");
+  reOriginal.hidden = true;
+  reOriginalTexto.textContent = "";
+  reResultado.hidden = true;
+  rePagina.replaceChildren();
+  reLacunas.hidden = true;
+  reLacunasLista.replaceChildren();
+  reAvisoPagina.hidden = true;
+}
+
+// Abre a janela para a vaga. Tudo o que vem da vaga e do currículo entra como texto puro.
+function abrirJanelaReescrita(vaga) {
+  vagaReescrita = vaga;
+  reVaga.textContent = vaga.titulo + " · " + vaga.empresa;
+  const semCurriculo = curriculoVazio(perfil);
+  reSemCurriculo.hidden = !semCurriculo;
+  reComCurriculo.hidden = semCurriculo;
+  limparResultadoReescrita();
+  reResposta.value = "";
+  rePrompt.value = semCurriculo ? "" : montarPromptReescrita(vaga, perfil);   // só texto, para copiar: nunca é executado
+  if (typeof janelaRe.showModal === "function") {
+    janelaRe.showModal();
+  } else {
+    janelaRe.setAttribute("open", "");
+  }
+}
+
+function fecharJanelaReescrita() {
+  if (typeof janelaRe.close === "function") {
+    janelaRe.close();
+  } else {
+    janelaRe.removeAttribute("open");
+  }
+}
+
+// Desenha a "folha" do currículo a partir dos blocos lidos. Só createElement + textContent (nunca innerHTML).
+function construirPaginaCurriculo(pagina, leitura, idioma) {
+  const s = leitura.secoes;
+  pagina.replaceChildren();
+  if (s.NOME) {
+    pagina.appendChild(criar("h1", "", linhasDeLista(s.NOME).map(function (l) { return l.texto; }).join(" ")));
+  }
+  if (s.CONTATO) {
+    pagina.appendChild(criar("p", "cv-contato", linhasDeLista(s.CONTATO).map(function (l) { return l.texto; }).join(" | ")));
+  }
+  ["RESUMO", "OBJETIVO", "EDUCACAO", "EXPERIENCIA", "HABILIDADES", "IDIOMAS"].forEach(function (bloco) {
+    if (!s[bloco]) {
+      return;
+    }
+    pagina.appendChild(criar("h2", "", rotuloBlocoCurriculo(bloco, idioma)));
+    const comTitulos = bloco === "EDUCACAO" || bloco === "EXPERIENCIA";
+    let lista = null;
+    linhasDeLista(s[bloco]).forEach(function (linha) {
+      if (linha.item) {
+        if (lista === null) {
+          lista = criar("ul", "", "");
+          pagina.appendChild(lista);
+        }
+        lista.appendChild(criar("li", "", linha.texto));
+      } else {
+        lista = null;
+        pagina.appendChild(criar("p", comTitulos ? "cv-subtitulo" : "", linha.texto));
+      }
+    });
+  });
+}
+
+// Lê o que está na folha (inclusive o que o usuário editou) como texto simples, com "- " nos itens de lista
+function textoDaPagina(pagina) {
+  const partes = [];
+  Array.from(pagina.children).forEach(function (no) {
+    const tag = no.tagName;
+    if (tag === "UL" || tag === "OL") {
+      Array.from(no.children).forEach(function (li) { partes.push("- " + li.innerText.trim()); });
+    } else {
+      if (tag === "H2") {
+        partes.push("");
+      }
+      const texto = no.innerText.trim();
+      if (texto !== "") {
+        partes.push(texto);
+      }
+    }
+  });
+  return partes.join("\n").trim();
+}
+
+// Cálculo aproximado: a folha impressa (A4 com margens de 15 mm em cima e embaixo) cabe em uma página?
+function curriculoCabeEmUmaPagina() {
+  const copia = rePagina.cloneNode(true);
+  copia.removeAttribute("id");
+  const regua = document.createElement("div");
+  regua.style.height = "267mm";   // 297 mm da folha - 2 x 15 mm de margem
+  medidaCv.replaceChildren(copia, regua);
+  const cabe = copia.offsetHeight <= regua.offsetHeight;
+  medidaCv.replaceChildren();
+  return cabe;
+}
+
+function atualizarAvisoPagina() {
+  reAvisoPagina.hidden = curriculoCabeEmUmaPagina();
+  reAvisoPagina.textContent = "Pelo cálculo aproximado, este currículo pode passar de uma página A4. Corte um pouco do texto (a fonte do seu aparelho também muda isso).";
+}
+
+// "Montar currículo": lê a resposta colada com tolerância e mostra a folha editável
+function montarCurriculoDaResposta() {
+  limparResultadoReescrita();
+  const colado = reResposta.value;
+  if (colado.trim() === "") {
+    mostrarAvisoReescrita("Cole primeiro a resposta da IA no campo acima.", "erro");
+    return;
+  }
+  const leitura = lerRespostaCurriculo(colado);
+  if (!leitura.ok) {
+    reOriginal.hidden = false;
+    reOriginalTexto.textContent = colado;
+    mostrarAvisoReescrita("Não consegui encontrar os blocos do currículo (===NOME===, ===RESUMO===, ===EXPERIENCIA=== ...). Confira se você colou a resposta inteira e se a IA seguiu o formato; se precisar, peça de novo.", "erro");
+    return;
+  }
+  const idioma = idiomaDaVaga(vagaReescrita || {});
+  construirPaginaCurriculo(rePagina, leitura, idioma);
+  reResultado.hidden = false;
+  const avisos = [];
+  if (leitura.faltando.length > 0) {
+    avisos.push("Estes blocos não vieram na resposta: " + leitura.faltando.map(function (b) { return rotuloBlocoCurriculo(b, "pt"); }).join(", ")
+      + ". Se o seu currículo tem essa informação, peça à IA para incluí-la; se não tem, está tudo bem.");
+  }
+  if (leitura.desconhecidos.length > 0) {
+    avisos.push("Ignorei blocos que não conheço: " + leitura.desconhecidos.join(", ") + ".");
+  }
+  mostrarAvisoReescrita(avisos.join(" "), "aviso");
+  reLacunasLista.replaceChildren();
+  leitura.lacunas.forEach(function (texto) { reLacunasLista.appendChild(criar("li", "", texto)); });
+  reLacunas.hidden = leitura.lacunas.length === 0;   // fica FORA da folha: nunca vai para o PDF
+  atualizarAvisoPagina();
+}
+
+// Prepara a impressão: copia só a folha para a área de impressão e dá ao documento o nome do arquivo
+function prepararImpressao() {
+  const copia = rePagina.cloneNode(true);
+  ["id", "contenteditable", "role", "aria-multiline", "aria-label", "spellcheck"].forEach(function (nome) { copia.removeAttribute(nome); });
+  copia.querySelectorAll("script, style, iframe, object, embed, link, meta, img, svg, form, input, button").forEach(function (no) { no.remove(); });
+  areaImpressao.replaceChildren(copia);
+  const titulo = rePagina.querySelector("h1");
+  const nome = titulo !== null ? titulo.innerText.trim() : perfil.nome;
+  if (tituloAntesImpressao === null) {
+    tituloAntesImpressao = document.title;
+  }
+  document.title = nomeCurriculoPdf(nome, vagaReescrita !== null ? vagaReescrita.area : "");
+  document.body.classList.add("imprimindo-cv");
+}
+
+// Depois da impressão (ou de cancelar): volta o site e o título ao normal
+function restaurarImpressao() {
+  document.body.classList.remove("imprimindo-cv");
+  areaImpressao.replaceChildren();
+  if (tituloAntesImpressao !== null) {
+    document.title = tituloAntesImpressao;
+    tituloAntesImpressao = null;
+  }
+}
+
+// "Baixar PDF": abre a impressão do navegador só com a folha do currículo (o aluno escolhe "Salvar como PDF")
+function baixarPdf() {
+  if (rePagina.textContent.trim() === "") {
+    return;
+  }
+  atualizarAvisoPagina();
+  prepararImpressao();
+  window.addEventListener("afterprint", restaurarImpressao, { once: true });
+  setTimeout(restaurarImpressao, 120000);   // rede de segurança, se o navegador nunca avisar o fim da impressão
+  window.print();
+}
+
+// Colar ou arrastar para dentro da folha vira texto simples (nada de HTML vindo de fora)
+function colarSoTexto(evento) {
+  evento.preventDefault();
+  const texto = evento.clipboardData ? evento.clipboardData.getData("text/plain") : "";
+  if (texto !== "") {
+    document.execCommand("insertText", false, texto);
+  }
+}
+
 // Texto ao lado de "Meu perfil": mostra se o perfil está ativo
 function mostrarEstadoPerfil() {
   const ativo = !perfilVazio(perfil) || perfil.nome !== "";
@@ -921,6 +1138,33 @@ ligarBotaoCopiar(document.getElementById("cand-copiar-destinatarios"), function 
 ligarBotaoCopiar(document.getElementById("cand-copiar-assunto"), function () {
   return vagaEmPreparo !== null && typeof vagaEmPreparo.assuntoEmail === "string" ? vagaEmPreparo.assuntoEmail.trim() : "";
 });
+document.getElementById("cand-reescrever").addEventListener("click", function () {
+  const vaga = vagaEmPreparo;
+  fecharJanelaCandidatura();
+  if (vaga !== null) {
+    abrirJanelaReescrita(vaga);
+  }
+});
+document.getElementById("re-fechar").addEventListener("click", fecharJanelaReescrita);
+janelaRe.addEventListener("click", function (evento) {
+  if (evento.target === janelaRe) {  // clique fora da caixa (no fundo escuro)
+    fecharJanelaReescrita();
+  }
+});
+janelaRe.addEventListener("close", function () { vagaReescrita = null; });
+document.getElementById("re-ir-curriculo").addEventListener("click", function () {
+  fecharJanelaReescrita();
+  document.getElementById("perfil").open = true;
+  caixaCurriculo.scrollIntoView({ block: "center" });
+  caixaCurriculo.focus();
+});
+document.getElementById("re-montar").addEventListener("click", montarCurriculoDaResposta);
+document.getElementById("re-baixar-pdf").addEventListener("click", baixarPdf);
+ligarBotaoCopiar(document.getElementById("re-copiar-prompt"), function () { return rePrompt.value; });
+ligarBotaoCopiar(document.getElementById("re-copiar-texto"), function () { return textoDaPagina(rePagina); });
+rePagina.addEventListener("paste", colarSoTexto);
+rePagina.addEventListener("drop", function (evento) { evento.preventDefault(); });
+rePagina.addEventListener("input", atualizarAvisoPagina);
 candResposta.addEventListener("input", atualizarEscrever);
 ligarBotaoCopiar(document.getElementById("cand-copiar-prompt"), function () { return candPrompt.value; });
 ligarBotaoCopiar(candCopiarResposta, function () { return candResposta.value.trim(); });

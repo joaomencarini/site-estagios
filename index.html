@@ -145,6 +145,7 @@
         <button id="cand-fechar" type="button" class="botao-faixa">Fechar</button>
       </div>
       <p id="cand-vaga" class="cand-vaga"></p>
+      <button id="cand-reescrever" type="button" class="botao-secundario botao-reescrever">Reescrever currículo para esta vaga</button>
 
       <div id="cand-sem-curriculo" hidden>
         <p>Para preparar a candidatura, cole o texto do seu currículo no painel <strong>Meu perfil &rarr; Meu currículo</strong>. Ele fica só neste navegador e nada é enviado a servidor.</p>
@@ -194,6 +195,60 @@
   </dialog>
 
   <!-- Os arquivos de regras e de dados vêm primeiro: criam as listas que o app.js usa -->
+
+  <dialog id="janela-reescrita" class="janela" aria-labelledby="re-titulo">
+    <div class="janela-conteudo">
+      <div class="janela-topo">
+        <h2 id="re-titulo">Reescrever currículo para esta vaga</h2>
+        <button id="re-fechar" type="button" class="botao-faixa">Fechar</button>
+      </div>
+      <p id="re-vaga" class="cand-vaga"></p>
+
+      <div id="re-sem-curriculo" hidden>
+        <p>Para reescrever o currículo, cole o texto dele (ou anexe um PDF/Word) no painel <strong>Meu perfil &rarr; Meu currículo</strong>. Ele fica só neste navegador e nada é enviado a servidor.</p>
+        <button id="re-ir-curriculo" type="button" class="botao-email">Ir para Meu currículo</button>
+      </div>
+
+      <div id="re-com-curriculo" hidden>
+        <h3>1. Copie o prompt e cole na sua IA</h3>
+        <p class="perfil-dica">Use o ChatGPT, o Claude ou outra IA de sua preferência. O prompt pede para ela usar só o que está no seu currículo, sem inventar nada.</p>
+        <textarea id="re-prompt" class="cand-texto" rows="7" readonly aria-label="Prompt para copiar"></textarea>
+        <button id="re-copiar-prompt" type="button" class="botao-secundario">Copiar prompt</button>
+
+        <h3 id="re-titulo-resposta">2. Cole aqui a resposta da IA</h3>
+        <textarea id="re-resposta" class="cand-texto" rows="8" maxlength="30000" aria-labelledby="re-titulo-resposta" spellcheck="false"></textarea>
+        <button id="re-montar" type="button" class="botao-email">Montar currículo</button>
+        <p id="re-aviso" class="perfil-mensagem" role="status" hidden></p>
+
+        <div id="re-original" hidden>
+          <h3>Resposta original da IA</h3>
+          <pre id="re-original-texto" class="re-original"></pre>
+        </div>
+
+        <div id="re-resultado" hidden>
+          <h3>3. Revise e baixe</h3>
+          <p class="perfil-dica">Clique no texto da página abaixo para corrigir o que quiser. Confira tudo: o currículo deve ter só informações verdadeiras.</p>
+          <div id="re-pagina" class="cv-pagina" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Currículo (editável)" spellcheck="false"></div>
+          <p id="re-aviso-pagina" class="aviso-perfil" role="status" hidden></p>
+          <div class="email-botoes">
+            <button id="re-baixar-pdf" type="button" class="botao-email">Baixar PDF</button>
+            <button id="re-copiar-texto" type="button" class="botao-secundario">Copiar texto</button>
+          </div>
+          <p class="perfil-dica">Para salvar como PDF: na janela de impressão que abrir, escolha "Salvar como PDF" como destino e clique em Salvar.</p>
+          <div id="re-lacunas" class="re-lacunas" hidden>
+            <h3>Sugestões para você avaliar (não vão para o PDF)</h3>
+            <p class="perfil-dica">A IA listou o que esta área costuma valorizar e o currículo não mostra. Acrescente só se for verdade.</p>
+            <ul id="re-lacunas-lista"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Só aparece na impressão (Baixar PDF): recebe uma cópia da página do currículo -->
+  <div id="area-impressao" aria-hidden="true"></div>
+  <div id="medida-cv" class="cv-medida" aria-hidden="true"></div>
+
   <script src="js/regras.js"></script>
   <script src="data/vagas.js"></script>
   <script src="data/vagas-auto.js"></script>
