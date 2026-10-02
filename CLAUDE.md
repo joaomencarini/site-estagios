@@ -15,6 +15,8 @@ Iniciante em programação. Regra de ouro: **simplicidade acima de tudo**. Nada 
 - **Git + GitHub** — versionamento.
 - **Scripts em Node.js (sem dependências)** em `scripts/` — atualizam vagas automaticamente e conferem links. Só rodam no GitHub Actions (ou no seu computador); o site em si continua sendo HTML/CSS/JS puro.
 - **localStorage do navegador** — guarda o "Meu perfil" (interesses) só no aparelho de quem usa; sem login, sem backend e sem enviar nada a servidor.
+- **IndexedDB do navegador** — guarda o arquivo do currículo (PDF/Word) anexado, só no aparelho de quem usa.
+- **pdf.js e mammoth** (únicas bibliotecas, copiadas em `js/vendor/`, sem CDN) — só para ler o texto do currículo anexado. Justificativa: ler PDF e .docx em JS puro não é viável.
 - **GitHub Actions** — executa os scripts todo dia às 8h (Brasília) e faz commit se houver mudança.
 - **GitHub Pages** — hospedagem gratuita, publicada a partir da branch `main` (pasta raiz). Endereço: https://joaomencarini.github.io/site-estagios/
 - **Editor (VS Code)** — opcional: a extensão Live Server recarrega a página ao salvar.
@@ -40,6 +42,9 @@ site-estagios/
 ├── js/
 │   ├── regras.js       # regras de expiração, link inativo, e-mail, pontuação/ordenação por perfil, currículo, prompt, exportar/importar (usadas pelo site, pelos scripts e pelos testes)
 │   ├── app.js          # junta as vagas, esconde as vencidas/inativas, aplica filtros, desenha os cards
+│   ├── arquivo.js      # guarda/lê/apaga o arquivo do currículo (PDF/Word) no IndexedDB do navegador
+│   ├── extrair.js      # tira o texto do PDF (pdf.js) ou do .docx (mammoth), no navegador
+│   ├── vendor/         # bibliotecas copiadas (pdf.js e mammoth), versões fixas + licenças; ver js/vendor/LEIA-ME.md
 │   └── adicionar.js    # lógica do formulário adicionar.html
 ├── testes/
 │   └── regras.test.js  # testes unitários das regras (node --test)
@@ -126,7 +131,19 @@ Tudo roda no navegador. **Nenhum texto é enviado a servidor** (o site não usa 
   - **Prompt por e-mail:** até 150 palavras; no idioma do assunto exigido (ou português do Brasil se não houver assunto); "Use SOMENTE informações que estão no currículo abaixo. Não invente experiência, notas, empresas, datas ou números."; sem placeholders; termina com o nome do candidato. **Prompt por formulário (só link):** "resumo do meu perfil" (até 80 palavras) + exatamente 3 pontos de ligação com a vaga, até 150 palavras no total.
   - **Proteção contra "injeção de prompt":** os dados entram entre marcadores (`<<<VAGA>>>…<<<FIM_VAGA>>>`, `<<<CANDIDATO>>>`, `<<<CURRICULO>>>`); o prompt manda tratar o que está dentro como dado, nunca como instrução; `escaparMarcadores` impede que o texto imite um marcador (`<<<` vira `< < <`); campos curtos viram linha única. Tudo é inserido como texto puro (`textContent`/`value`), nunca `innerHTML`.
   - **Limite do `mailto:`:** programas de e-mail cortam endereços muito longos. Acima de `LIMITE_MAILTO` (**1800** caracteres, já codificado), o botão "Escrever e-mail" é desativado, aparece um aviso e continuam valendo "Copiar e-mail" e "Copiar texto".
-- **Testes:** os de currículo, prompt, mailto com corpo e exportar/importar estão em `testes/regras.test.js` (hoje 84 testes, só com currículo fictício). Ao mudar o prompt ou o formato de exportação, atualize os testes e esta seção (suba a `versao` se o formato mudar de forma incompatível).
+- **Testes:** os de currículo, prompt, mailto com corpo e exportar/importar estão em `testes/regras.test.js` (só com currículo fictício). Ao mudar o prompt ou o formato de exportação, atualize os testes e esta seção (suba a `versao` se o formato mudar de forma incompatível).
+
+### Anexar currículo em PDF ou Word (Etapa 9b)
+Botão **Anexar currículo (PDF ou Word .docx)** em "Meu currículo". Tudo no navegador; **nenhum arquivo nem texto sai do aparelho** (sem `fetch`/XHR/beacon; as bibliotecas vêm de `js/vendor/`, nunca de CDN).
+- **Validação** (`validarArquivoCurriculo`, `conferirConteudoArquivo` em `js/regras.js`): só `.pdf` e `.docx` (qualquer caixa), de 1 byte até **5 MB** (5 MB exatos passam). `.doc` antigo, `.txt`, imagens e arquivo sem extensão são recusados com mensagem clara. O conteúdo também é conferido pelos primeiros bytes (um `.pdf` que não é PDF, ou um Word antigo/arquivo do Office com senha, é recusado). Recusou = **nada muda** (texto e arquivo guardado continuam como estavam).
+- **Texto:** extraído por `js/extrair.js` (PDF: pdf.js, máx. 40 páginas e 30 s, `isEvalSupported: false`; DOCX: mammoth `extractRawText`) e passado por `prepararTextoExtraido` (limpa, corta em 15.000 e avisa). Preenche o campo "Meu currículo" para o aluno revisar e editar; se o campo já tem texto, o site **pergunta** antes de substituir (Cancelar = mantém o texto e guarda o arquivo mesmo assim). Mesmo caminho de sempre depois: o texto vai para `montarPrompt` entre os marcadores.
+- **Falhas (nunca inventar texto):** PDF/DOCX sem texto extraível (escaneado, só imagens): avisa, **guarda o arquivo**, deixa o campo como estava e pede para colar o texto. PDF com senha, arquivo danificado ou leitor indisponível: avisa e não guarda. A página nunca trava.
+- **Aberto direto do disco (`file://`):** o pdf.js 4.x é módulo e o navegador não o carrega assim; o site avisa (PDF só funciona pelo endereço publicado ou Live Server). `.docx` funciona em qualquer caso.
+- **Arquivo original no IndexedDB** (`js/arquivo.js`; banco `estagiosArquivo`, loja `arquivos`, chave `curriculo`; um arquivo por vez; guarda nome, tipo, tamanho, data e os bytes; o nome é limpo por `limparNomeArquivo`; o registro lido é revalidado). O painel mostra nome, tamanho e data + **Remover arquivo**. Se o IndexedDB não existir ou falhar, o site avisa e o arquivo vale só nesta visita; o texto segue funcionando. **Limpar meu perfil** apaga também o arquivo. **O backup (exportar/importar) guarda só o texto**; isso está escrito na tela.
+- **Janela "Preparar candidatura":** bloco "3. Anexe seu currículo" com o aviso fixo "O botão Escrever e-mail não consegue anexar arquivos. Anexe o currículo baixado, ou use Compartilhar com anexo no celular.", o **Para** (destinatários) e o **Assunto** exigido com "Copiar" logo acima dos botões **Baixar meu currículo** (baixa com o nome original) e **Compartilhar com anexo** (só aparece se `navigator.share` + `navigator.canShare({ files })` funcionarem; compartilha o arquivo, o assunto como título e o e-mail colado como texto; se a pessoa cancelar, nada acontece). Sem arquivo anexado, a janela diz como anexar.
+- **Segurança:** nome do arquivo e texto extraído entram só como texto puro (`textContent`/`value`). **Nunca coloque PDF/Word de currículo no repositório:** o `.gitignore` bloqueia `*.pdf`, `*.docx`, `*.doc`, `*.odt`, `*.rtf` (exceto `js/vendor/**`) e há um teste que falha se aparecer algum no projeto. Testes usam só arquivos fictícios gerados na hora, fora do repositório.
+- **Bibliotecas:** pdf.js 4.10.38 (a 3.x tem falha de segurança conhecida, CVE-2024-4367) e mammoth 1.13.0, em `js/vendor/`, com licenças e instruções de atualização em `js/vendor/LEIA-ME.md`.
+- **Testes:** unitários em `testes/regras.test.js` (validação de tipo/tamanho/nome estranho, conteúdo pelos bytes, tamanho/data, texto extraído, dados do compartilhar, ausência de PDF/Word no repositório; hoje 93 testes). No navegador foram feitos com PDF/DOCX fictícios (inclusive sem texto, com senha, de 5 MB e maior que 5 MB), a 360px e 1280px, sem rolagem horizontal, sem erros no console, só requisições GET ao próprio site, e com IndexedDB indisponível.
 
 ## Regra do projeto sobre conteúdo das vagas
 **Nunca copiar a descrição completa das vagas.** Guardar só os dados básicos acima, o link da vaga original e, quando a vaga pedir envio de CV por e-mail, o e-mail e o assunto indicados por ela (e só esses). A candidatura sempre acontece na página original, e a fonte é sempre indicada no cartão.
@@ -199,6 +216,7 @@ Confere cada vaga **com link**, manual ou automática, que ainda não venceu (va
 7. **Candidatura por e-mail** — pronto quando: vagas que pedem CV por e-mail mostram o e-mail com "Copiar e-mail" e "Escrever e-mail" (e assunto, se houver); o verificador de links ignora e-mails; `adicionar.html` gera os dois campos. (Extensão: `emailCandidatura` aceita também uma lista de e-mails, cada um com "Copiar e-mail" e um "Escrever e-mail" com todos os destinatários.)
 8. **Evolução (só se necessário)** — favoritos (localStorage), formulário de envio de vaga, backend/banco (ex.: Supabase) apenas se o arquivo de vagas deixar de bastar.
 9. **Meu currículo no navegador + "Preparar candidatura"** — pronto quando: o currículo (até 15.000 caracteres) fica só no `localStorage`; exportar/importar perfil funciona e recusa arquivos inválidos; "Preparar candidatura" gera o prompt (e-mail ou formulário) e abre o e-mail com o texto colado; "Limpar meu perfil" apaga o currículo; nada é enviado a servidor; testes só com currículo fictício.
+9b. **Anexar currículo em PDF ou Word** — pronto quando: aceita .pdf/.docx até 5 MB e recusa o resto com mensagem; extrai o texto no navegador (sem CDN, sem rede) e pergunta antes de substituir; avisa em PDF sem texto/com senha sem travar; guarda o arquivo no IndexedDB (com aviso se indisponível) e "Limpar meu perfil" o apaga; a janela "Preparar candidatura" tem Baixar meu currículo, Compartilhar com anexo (se suportado) e o aviso sobre anexo; testes só com arquivos fictícios.
 
 ## Convenções
 - Uma etapa por vez; não antecipar funcionalidades das etapas seguintes.

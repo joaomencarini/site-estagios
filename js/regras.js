@@ -582,6 +582,164 @@ function salvarPerfil(armazenamento, perfil) {
 }
 
 // No Node (scripts) exporta as funções; no navegador elas já ficam disponíveis direto
+// ===== Currículo em arquivo (PDF ou Word .docx) =====
+// Aqui só ficam as regras que não dependem do navegador (validação, nomes, textos). Ler o arquivo
+// fica em js/extrair.js e guardar no navegador (IndexedDB) fica em js/arquivo.js.
+
+const TAMANHO_MAXIMO_ARQUIVO = 5 * 1024 * 1024;   // 5 MB
+const MINIMO_TEXTO_EXTRAIDO = 20;                 // menos letras que isso = "sem texto"
+const MENSAGEM_FORMATO_ARQUIVO = "Só aceito arquivos PDF (.pdf) ou Word (.docx). No Word, use Salvar como > Documento do Word (.docx).";
+
+// Extensão em minúsculas, sem o ponto ("Meu CV.PDF" -> "pdf"; sem extensão -> "")
+function extensaoArquivo(nome) {
+  const texto = typeof nome === "string" ? nome : "";
+  const posicao = texto.lastIndexOf(".");
+  return posicao < 0 ? "" : texto.slice(posicao + 1).trim().toLowerCase();
+}
+
+// Confere nome, extensão e tamanho (o conteúdo é conferido depois, em conferirConteudoArquivo).
+// Devolve { ok: true, formato: "pdf" | "docx" } ou { ok: false, erro: "mensagem em português" }.
+function validarArquivoCurriculo(arquivo) {
+  const nome = arquivo && typeof arquivo.name === "string" ? arquivo.name : "";
+  const tamanho = arquivo ? arquivo.size : NaN;
+  if (typeof tamanho !== "number" || !isFinite(tamanho) || tamanho < 0) {
+    return { ok: false, erro: "Não consegui ler o tamanho do arquivo." };
+  }
+  const extensao = extensaoArquivo(nome);
+  if (extensao === "doc") {
+    return { ok: false, erro: "Este é um Word antigo (.doc), que não consigo ler. No Word, use Salvar como > Documento do Word (.docx) e anexe de novo." };
+  }
+  if (extensao !== "pdf" && extensao !== "docx") {
+    return { ok: false, erro: MENSAGEM_FORMATO_ARQUIVO };
+  }
+  if (tamanho === 0) {
+    return { ok: false, erro: "O arquivo está vazio." };
+  }
+  if (tamanho > TAMANHO_MAXIMO_ARQUIVO) {
+    return { ok: false, erro: "O arquivo tem " + formatarTamanho(tamanho) + " e o limite é 5 MB. Reduza o arquivo (por exemplo, exporte o PDF sem imagens) ou cole o texto." };
+  }
+  return { ok: true, formato: extensao };
+}
+
+// Nome seguro para mostrar e para baixar: sem pasta, sem caracteres de controle nem de inverter o sentido
+// do texto, sem os caracteres que o Windows não aceita, com no máximo 120 caracteres (mantendo a extensão).
+function limparNomeArquivo(nome, formato) {
+  let texto = typeof nome === "string" ? nome : "";
+  texto = texto.split(/[\\/]/).pop();
+  texto = texto
+    .replace(/[\u0000-\u001f\u007f-\u009f\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "")
+    .replace(/[<>:"|?*]/g, "_")
+    .replace(/\s+/g, " ")
+    .trim();
+  const extensao = extensaoArquivo(texto);
+  if (texto === "" || texto === "." || texto === ".." || texto.replace(/^\.+/, "") === "") {
+    return "curriculo." + (formato === "docx" ? "docx" : "pdf");
+  }
+  const MAXIMO = 120;
+  if (Array.from(texto).length > MAXIMO) {
+    const sufixo = extensao !== "" ? "." + extensao : "";
+    const base = Array.from(texto.slice(0, texto.length - sufixo.length)).slice(0, MAXIMO - sufixo.length).join("");
+    texto = base + sufixo;
+  }
+  return texto;
+}
+
+// Descobre o formato pelos primeiros bytes: "pdf", "docx" (zip), "ole" (Word antigo ou arquivo do Office
+// com senha) ou "" (outra coisa). Aceita Uint8Array ou ArrayBuffer.
+function detectarFormatoArquivo(bytes) {
+  const b = bytes instanceof ArrayBuffer ? new Uint8Array(bytes) : bytes;
+  if (!b || typeof b.length !== "number" || b.length < 4) {
+    return "";
+  }
+  const comeca = function (lista, deslocamento) {
+    for (let i = 0; i < lista.length; i++) {
+      if (b[deslocamento + i] !== lista[i]) {
+        return false;
+      }
+    }
+    return true;
+  };
+  for (let inicio = 0; inicio <= Math.min(1024, b.length - 5); inicio++) {
+    if (comeca([0x25, 0x50, 0x44, 0x46, 0x2d], inicio)) {   // "%PDF-" nos primeiros 1024 bytes
+      return "pdf";
+    }
+  }
+  if (b.length >= 8 && comeca([0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1], 0)) {
+    return "ole";
+  }
+  if (comeca([0x50, 0x4b, 0x03, 0x04], 0)) {
+    return "docx";
+  }
+  return "";
+}
+
+// Compara o que o nome diz com o que o arquivo realmente é. Devolve "" se estiver tudo certo, ou a mensagem.
+function conferirConteudoArquivo(formatoEsperado, bytes) {
+  const real = detectarFormatoArquivo(bytes);
+  if (real === formatoEsperado) {
+    return "";
+  }
+  if (real === "ole") {
+    return "Este arquivo está protegido por senha ou é um Word antigo. Salve uma cópia sem senha, em .docx ou PDF, e anexe de novo (ou cole o texto).";
+  }
+  return "O conteúdo do arquivo não parece ser um " + (formatoEsperado === "pdf" ? "PDF" : "Word (.docx)") + " de verdade. Confira o arquivo ou cole o texto.";
+}
+
+// "512 bytes", "350 KB", "1,2 MB" (vírgula decimal)
+function formatarTamanho(bytes) {
+  const n = Number(bytes);
+  if (!isFinite(n) || n < 0) {
+    return "";
+  }
+  if (n < 1024) {
+    return Math.round(n) + " bytes";
+  }
+  const casas = function (valor) { return (Math.round(valor * 10) / 10).toString().replace(".", ","); };
+  if (n < 1024 * 1024) {
+    return casas(n / 1024) + " KB";
+  }
+  return casas(n / (1024 * 1024)) + " MB";
+}
+
+// "02/10/2026 14:05" (hora do aparelho). Aceita milissegundos.
+function formatarDataArquivo(milissegundos) {
+  const d = new Date(milissegundos);
+  if (typeof milissegundos !== "number" || isNaN(d.getTime())) {
+    return "";
+  }
+  const dois = function (n) { return String(n).padStart(2, "0"); };
+  return dois(d.getDate()) + "/" + dois(d.getMonth() + 1) + "/" + d.getFullYear() + " " + dois(d.getHours()) + ":" + dois(d.getMinutes());
+}
+
+// Arruma o texto tirado do arquivo. Devolve { texto, vazio, cortado }:
+// vazio = quase nenhuma letra (PDF escaneado, por exemplo: nunca inventamos texto);
+// cortado = passou de 15.000 caracteres e só o começo foi mantido.
+function prepararTextoExtraido(bruto) {
+  let texto = typeof bruto === "string" ? bruto : "";
+  texto = texto.replace(/\r\n?/g, "\n").replace(/[ \t\u00a0]+\n/g, "\n").replace(/\n{3,}/g, "\n\n");
+  const limpo = limparCurriculo(texto);
+  const letras = limpo.replace(/\s/g, "").length;
+  if (letras < MINIMO_TEXTO_EXTRAIDO) {
+    return { texto: "", vazio: true, cortado: false };
+  }
+  const total = Array.from(texto.trim()).length;
+  return { texto: limpo, vazio: false, cortado: total > TAMANHO_MAXIMO_CURRICULO };
+}
+
+// O que vai para navigator.share: o arquivo, o assunto (se houver) como título e o e-mail colado como texto.
+function dadosCompartilhar(arquivo, assunto, texto) {
+  const dados = { files: [arquivo] };
+  const corpo = typeof texto === "string" ? texto.trim() : "";
+  if (corpo !== "") {
+    dados.text = corpo;
+  }
+  const titulo = typeof assunto === "string" ? assunto.trim() : "";
+  if (titulo !== "") {
+    dados.title = titulo;
+  }
+  return dados;
+}
+
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo, emailValido, emailsValidos, montarMailto,
     PESOS, LIMITE_COMBINA, CHAVE_PERFIL, TAMANHO_MAXIMO_NOME, TAMANHO_MAXIMO_CURRICULO, FORMATO_EXPORTACAO, VERSAO_EXPORTACAO,
@@ -591,5 +749,7 @@ if (typeof module !== "undefined" && module.exports) {
     sanitizarPerfil, palavrasChave, perfilVazio, pontuarVaga, pontuacaoMaxima, perfilTemFiltro, passaFiltroPerfil,
     descreverFiltroPerfil, passaFiltrosPagina, filtrarVagas, combinaComPerfil, ordenarVagas, lerPerfil, salvarPerfil,
     apagarPerfil, montarExportacao, validarImportacao, tipoCandidatura, linhaUnica, escaparMarcadores, montarPrompt,
-    montarMailtoComCorpo };
+    montarMailtoComCorpo, TAMANHO_MAXIMO_ARQUIVO, extensaoArquivo, validarArquivoCurriculo, limparNomeArquivo,
+    detectarFormatoArquivo, conferirConteudoArquivo, formatarTamanho, formatarDataArquivo, prepararTextoExtraido,
+    dadosCompartilhar };
 }

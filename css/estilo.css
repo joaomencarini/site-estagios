@@ -587,6 +587,11 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 }
 .perfil-mensagem-erro { background: #fbe4e4; border-color: #e0a3a3; color: #7a1313; }
 .botao-preparar { margin-top: 0; }
+.curriculo-arquivo { display: grid; gap: 8px; margin-bottom: 12px; }
+.arquivo-guardado { display: grid; gap: 8px; padding: 10px 12px; background: #f3f5f7; border: 1px solid var(--cinza-borda); border-radius: 8px; }
+.arquivo-guardado-info { margin: 0; overflow-wrap: anywhere; font-size: 0.95rem; }
+.cand-linha { display: grid; gap: 6px; }
+.cand-linha p { overflow-wrap: anywhere; }
 
 /* Janela (dialog) */
 .janela {
@@ -613,5 +618,7 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 @media (min-width: 640px) {
   .perfil-backup { grid-template-columns: auto auto; justify-content: start; }
   .perfil-backup .botao-limpar-perfil { width: auto; }
+  .curriculo-arquivo .botao-limpar-perfil { width: auto; justify-self: start; }
+  .cand-linha { grid-template-columns: 1fr auto; align-items: center; }
   .janela-conteudo { padding: 20px; }
 }

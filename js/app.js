@@ -24,6 +24,12 @@ const mensagemPerfil = document.getElementById("perfil-mensagem");
 const botaoExportar = document.getElementById("botao-exportar-perfil");
 const botaoImportar = document.getElementById("botao-importar-perfil");
 const arquivoPerfil = document.getElementById("arquivo-perfil");
+const botaoAnexar = document.getElementById("botao-anexar-curriculo");
+const arquivoCurriculo = document.getElementById("arquivo-curriculo");
+const blocoArquivo = document.getElementById("arquivo-guardado");
+const infoArquivo = document.getElementById("arquivo-guardado-info");
+const botaoRemoverArquivo = document.getElementById("botao-remover-arquivo");
+const avisoBanco = document.getElementById("arquivo-aviso-banco");
 const janela = document.getElementById("janela-candidatura");
 const candVaga = document.getElementById("cand-vaga");
 const candSemCurriculo = document.getElementById("cand-sem-curriculo");
@@ -35,6 +41,19 @@ const candAvisoTamanho = document.getElementById("cand-aviso-tamanho");
 const candEscrever = document.getElementById("cand-escrever");
 const candCopiarResposta = document.getElementById("cand-copiar-resposta");
 const candAbrirVaga = document.getElementById("cand-abrir-vaga");
+const candAnexo = document.getElementById("cand-anexo");
+const candDestinatarios = document.getElementById("cand-destinatarios");
+const candDestinatariosTexto = document.getElementById("cand-destinatarios-texto");
+const candAssunto = document.getElementById("cand-assunto");
+const candAssuntoTexto = document.getElementById("cand-assunto-texto");
+const candSemArquivo = document.getElementById("cand-sem-arquivo");
+const candBotoesArquivo = document.getElementById("cand-botoes-arquivo");
+const candBaixar = document.getElementById("cand-baixar");
+const candCompartilhar = document.getElementById("cand-compartilhar");
+const candMensagem = document.getElementById("cand-mensagem");
+let arquivoGuardado = null;  // currículo em arquivo: { nome, tipo, tamanho, data, conteudo (ArrayBuffer) } ou null
+let arquivoNoBanco = false;  // true se esse arquivo também está guardado no IndexedDB
+let arquivoParaCompartilhar = null;  // File pronto para navigator.share (só existe se o navegador suportar)
 let vagaEmPreparo = null;  // vaga da janela "Preparar candidatura" aberta agora
 const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
 const avisoPerfil = document.getElementById("aviso-perfil");
@@ -510,6 +529,140 @@ function importarPerfil(arquivo) {
   leitor.readAsText(arquivo);
 }
 
+// ===== Currículo em arquivo (PDF ou Word) =====
+
+const TIPO_ARQUIVO = {
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+};
+
+// Mostra (ou esconde) o arquivo guardado: nome, tamanho e data. Tudo como texto puro.
+function mostrarArquivoGuardado() {
+  blocoArquivo.hidden = arquivoGuardado === null;
+  avisoBanco.hidden = arquivoGuardado === null || arquivoNoBanco;
+  if (arquivoGuardado !== null) {
+    infoArquivo.textContent = "Arquivo guardado: " + arquivoGuardado.nome + " · " + formatarTamanho(arquivoGuardado.tamanho)
+      + " · anexado em " + formatarDataArquivo(arquivoGuardado.data);
+  }
+}
+
+// Lê o arquivo escolhido como bytes (só na memória do navegador)
+function lerBytes(arquivo) {
+  return new Promise(function (resolver, rejeitar) {
+    const leitor = new FileReader();
+    leitor.onload = function () { resolver(leitor.result); };
+    leitor.onerror = function () { rejeitar(leitor.error); };
+    leitor.readAsArrayBuffer(arquivo);
+  });
+}
+
+// Confere um registro vindo do IndexedDB (que pode estar estragado) e o devolve limpo, ou null
+function registroValido(bruto) {
+  if (!bruto || typeof bruto !== "object" || !(bruto.conteudo instanceof ArrayBuffer)) {
+    return null;
+  }
+  const formato = detectarFormatoArquivo(bruto.conteudo);
+  if ((formato !== "pdf" && formato !== "docx") || bruto.conteudo.byteLength > TAMANHO_MAXIMO_ARQUIVO) {
+    return null;
+  }
+  return {
+    nome: limparNomeArquivo(bruto.nome, formato),
+    tipo: TIPO_ARQUIVO[formato],
+    tamanho: bruto.conteudo.byteLength,
+    data: typeof bruto.data === "number" ? bruto.data : Date.now(),
+    conteudo: bruto.conteudo
+  };
+}
+
+// Ao abrir o site: pega o arquivo que ficou guardado na visita anterior (se o navegador deixar)
+function carregarArquivoGuardado() {
+  return lerArquivoCurriculo(bancoDoNavegador()).then(function (resultado) {
+    const registro = resultado.ok ? registroValido(resultado.registro) : null;
+    if (registro !== null && arquivoGuardado === null) {
+      arquivoGuardado = registro;
+      arquivoNoBanco = true;
+      mostrarArquivoGuardado();
+    }
+  });
+}
+
+// "Anexar currículo": valida, tira o texto, preenche o campo (perguntando antes de trocar um texto existente)
+// e guarda o arquivo original no navegador. Nunca inventa texto: se não der para ler, avisa.
+async function anexarArquivo(arquivo) {
+  if (!arquivo) {
+    return;
+  }
+  const validacao = validarArquivoCurriculo(arquivo);
+  if (!validacao.ok) {
+    mostrarMensagemPerfil("Não anexei: " + validacao.erro, true);
+    return;
+  }
+  botaoAnexar.disabled = true;
+  mostrarMensagemPerfil("Lendo o arquivo...", false);
+  try {
+    let conteudo;
+    try {
+      conteudo = await lerBytes(arquivo);
+    } catch (erro) {
+      mostrarMensagemPerfil("Não consegui ler o arquivo. Cole o texto do currículo manualmente.", true);
+      return;
+    }
+    const problema = conferirConteudoArquivo(validacao.formato, conteudo);
+    if (problema !== "") {
+      mostrarMensagemPerfil("Não anexei: " + problema, true);
+      return;
+    }
+    const extracao = await extrairTextoArquivo(validacao.formato, conteudo);
+    if (!extracao.ok) {
+      const mensagens = {
+        senha: "Este PDF está protegido por senha e não consegui abri-lo. Salve uma cópia sem senha e anexe de novo, ou cole o texto do currículo manualmente.",
+        indisponivel: "Não consegui carregar o leitor de arquivos. Se você abriu o site direto do computador, o PDF só funciona pelo endereço publicado do site. Cole o texto do currículo manualmente.",
+        erro: "Não consegui ler o texto deste arquivo (ele pode estar danificado). Cole o texto do currículo manualmente."
+      };
+      mostrarMensagemPerfil(mensagens[extracao.motivo] || mensagens.erro, true);
+      return;
+    }
+    const preparado = prepararTextoExtraido(extracao.texto);
+    let aviso = "";
+    let ehErro = false;
+    if (preparado.vazio) {
+      aviso = "Guardei o arquivo, mas não encontrei texto nele (PDF escaneado ou só com imagens?). Cole o texto do currículo manualmente no campo acima.";
+      ehErro = true;
+    } else if (caixaCurriculo.value.trim() !== ""
+      && !window.confirm("O campo do currículo já tem texto. Substituir pelo texto tirado do arquivo?\n\nOK = substituir. Cancelar = manter o texto atual (o arquivo é guardado do mesmo jeito).")) {
+      aviso = "Mantive o texto que já estava no campo. O arquivo foi guardado.";
+    } else {
+      caixaCurriculo.value = preparado.texto;
+      aoMudarCurriculo();
+      aviso = "Texto tirado do arquivo. Revise e edite o que precisar." + (preparado.cortado ? " Ele passou de 15.000 caracteres, então usei só o começo." : "");
+    }
+    arquivoGuardado = {
+      nome: limparNomeArquivo(arquivo.name, validacao.formato),
+      tipo: TIPO_ARQUIVO[validacao.formato],
+      tamanho: conteudo.byteLength,
+      data: Date.now(),
+      conteudo: conteudo
+    };
+    const gravou = await guardarArquivoCurriculo(bancoDoNavegador(), arquivoGuardado);
+    arquivoNoBanco = gravou.ok;
+    mostrarArquivoGuardado();
+    mostrarMensagemPerfil(aviso, ehErro);
+  } finally {
+    botaoAnexar.disabled = false;
+  }
+}
+
+// "Remover arquivo": tira da memória e do IndexedDB (o texto do currículo continua)
+function removerArquivoGuardado() {
+  arquivoGuardado = null;
+  arquivoNoBanco = false;
+  mostrarArquivoGuardado();
+  return removerArquivoCurriculo(bancoDoNavegador()).then(function (resultado) {
+    mostrarMensagemPerfil(resultado.ok ? "Arquivo removido deste navegador. O texto do currículo continua." : "Arquivo removido desta página.", false);
+    return resultado.ok;
+  });
+}
+
 // ===== Janela "Preparar candidatura" =====
 
 // Liga um botão a "copiar este texto" (o texto é pedido na hora do clique) e avisa "Copiado!" por 2 segundos
@@ -542,6 +695,68 @@ function atualizarEscrever() {
   }
 }
 
+// Mensagem curta dentro da janela (texto puro)
+function mostrarMensagemJanela(texto) {
+  candMensagem.hidden = false;
+  candMensagem.textContent = texto;
+}
+
+// Parte "3. Anexe seu currículo": assunto e destinatários para copiar, e os botões do arquivo
+function atualizarAnexoJanela(vaga) {
+  const emails = tipoCandidatura(vaga) === "email" ? emailsValidos(vaga.emailCandidatura) : [];
+  const assunto = emails.length > 0 && typeof vaga.assuntoEmail === "string" ? vaga.assuntoEmail.trim() : "";
+  candMensagem.hidden = true;
+  candDestinatarios.hidden = emails.length === 0;
+  candDestinatariosTexto.textContent = "Para: " + emails.join(", ");
+  candAssunto.hidden = assunto === "";
+  candAssuntoTexto.textContent = "Assunto: " + assunto;
+  candSemArquivo.hidden = arquivoGuardado !== null;
+  candBotoesArquivo.hidden = arquivoGuardado === null;
+  arquivoParaCompartilhar = null;
+  candCompartilhar.hidden = true;
+  if (arquivoGuardado !== null) {
+    // o File é preparado já, para o clique em "Compartilhar" poder chamar navigator.share na hora
+    try {
+      const arquivo = new File([arquivoGuardado.conteudo], arquivoGuardado.nome, { type: arquivoGuardado.tipo });
+      if (typeof navigator.share === "function" && typeof navigator.canShare === "function" && navigator.canShare({ files: [arquivo] })) {
+        arquivoParaCompartilhar = arquivo;
+        candCompartilhar.hidden = false;
+      }
+    } catch (erro) {
+      arquivoParaCompartilhar = null;
+    }
+  }
+}
+
+// "Baixar meu currículo": baixa o arquivo guardado com o nome original
+function baixarArquivoGuardado() {
+  if (arquivoGuardado === null) {
+    return;
+  }
+  const url = URL.createObjectURL(new Blob([arquivoGuardado.conteudo], { type: arquivoGuardado.tipo }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = arquivoGuardado.nome;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+}
+
+// "Compartilhar com anexo": menu de compartilhar do aparelho, com o arquivo e o e-mail colado. Cancelar não faz nada.
+function compartilharArquivoGuardado() {
+  if (arquivoParaCompartilhar === null || vagaEmPreparo === null) {
+    return;
+  }
+  const assunto = typeof vagaEmPreparo.assuntoEmail === "string" ? vagaEmPreparo.assuntoEmail : "";
+  navigator.share(dadosCompartilhar(arquivoParaCompartilhar, assunto, candResposta.value)).catch(function (erro) {
+    if (erro && erro.name === "AbortError") {
+      return;  // a pessoa cancelou: nada acontece
+    }
+    mostrarMensagemJanela("Não foi possível compartilhar. Use Baixar meu currículo e anexe o arquivo no seu app de e-mail.");
+  });
+}
+
 // Abre a janela para a vaga. Tudo o que vem da vaga, do currículo e do nome entra como texto puro.
 function abrirJanelaCandidatura(vaga) {
   vagaEmPreparo = vaga;
@@ -563,7 +778,9 @@ function abrirJanelaCandidatura(vaga) {
       candAbrirVaga.href = vaga.link;
     }
     atualizarEscrever();
+    atualizarAnexoJanela(vaga);
   }
+  candAnexo.hidden = semCurriculo;
   if (typeof janela.showModal === "function") {
     janela.showModal();
   } else {
@@ -622,6 +839,16 @@ function limparPerfil() {
   const apagou = apagarPerfil(armazenamento);
   avisoPerfil.hidden = apagou;
   mostrarMensagemPerfil(apagou ? "Perfil e currículo apagados deste navegador." : "Perfil e currículo limpos nesta página.", false);
+  // o arquivo anexado também sai da memória e do IndexedDB
+  const tinhaArquivo = arquivoGuardado !== null;
+  arquivoGuardado = null;
+  arquivoNoBanco = false;
+  mostrarArquivoGuardado();
+  removerArquivoCurriculo(bancoDoNavegador()).then(function (resultado) {
+    if (tinhaArquivo && resultado.ok && apagou) {
+      mostrarMensagemPerfil("Perfil, currículo e arquivo apagados deste navegador.", false);
+    }
+  });
   mostrarEstadoPerfil();
   mostrarSaudacao();
   mostrarVagas();
@@ -679,6 +906,21 @@ document.getElementById("cand-ir-curriculo").addEventListener("click", function 
   caixaCurriculo.scrollIntoView({ block: "center" });
   caixaCurriculo.focus();
 });
+botaoAnexar.addEventListener("click", function () { arquivoCurriculo.click(); });
+arquivoCurriculo.addEventListener("change", function () {
+  const escolhido = arquivoCurriculo.files[0];
+  arquivoCurriculo.value = "";  // permite escolher o mesmo arquivo de novo depois
+  anexarArquivo(escolhido);
+});
+botaoRemoverArquivo.addEventListener("click", removerArquivoGuardado);
+candBaixar.addEventListener("click", baixarArquivoGuardado);
+candCompartilhar.addEventListener("click", compartilharArquivoGuardado);
+ligarBotaoCopiar(document.getElementById("cand-copiar-destinatarios"), function () {
+  return vagaEmPreparo === null ? "" : emailsValidos(vagaEmPreparo.emailCandidatura).join(", ");
+});
+ligarBotaoCopiar(document.getElementById("cand-copiar-assunto"), function () {
+  return vagaEmPreparo !== null && typeof vagaEmPreparo.assuntoEmail === "string" ? vagaEmPreparo.assuntoEmail.trim() : "";
+});
 candResposta.addEventListener("input", atualizarEscrever);
 ligarBotaoCopiar(document.getElementById("cand-copiar-prompt"), function () { return candPrompt.value; });
 ligarBotaoCopiar(candCopiarResposta, function () { return candResposta.value.trim(); });
@@ -690,3 +932,4 @@ mostrarSaudacao();
 avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada
 mostrarEstadoPerfil();
 mostrarVagas();
+carregarArquivoGuardado();  // traz de volta o arquivo anexado em visitas anteriores

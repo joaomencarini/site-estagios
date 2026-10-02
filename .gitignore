@@ -9,3 +9,12 @@ curriculum*
 cv-*.pdf
 cv_*.pdf
 *.cv.*
+
+# Arquivos de currículo (PDF/Word) nunca vão para o repositório, na raiz nem em pastas de teste.
+# Única exceção: as bibliotecas em js/vendor (não há PDF/Word lá, mas a exceção fica explícita).
+*.pdf
+*.docx
+*.doc
+*.odt
+*.rtf
+!js/vendor/**
