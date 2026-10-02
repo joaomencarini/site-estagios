@@ -3,120 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Estágios no Mercado Financeiro</title>
+  <meta name="color-scheme" content="light dark">
+  <!-- Nome do site: definido em js/marca.js. Os textos abaixo são só a "reserva" para quem não roda JavaScript (um teste confere se são iguais). -->
+  <title>Largada Fin — Estágios no mercado financeiro, num só lugar</title>
+  <meta name="description" content="Vagas de estágio em bancos, corretoras, gestoras, fintechs e consultorias, com link direto para se candidatar.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Largada Fin — Estágios no mercado financeiro, num só lugar">
+  <meta property="og:description" content="Vagas de estágio em bancos, corretoras, gestoras, fintechs e consultorias, com link direto para se candidatar.">
+  <meta property="og:site_name" content="Largada Fin">
   <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
+  <a class="pular" href="#lista-vagas">Ir para a lista de vagas</a>
+
   <header class="topo">
-    <h1>Estágios no Mercado Financeiro</h1>
-    <p id="saudacao">Vagas de estágio para universitários brasileiros, com link para a página original de cada vaga.</p>
+    <div class="conteudo topo-linha">
+      <div class="marca">
+        <h1 class="marca-nome"><span data-marca="nome">Largada Fin</span></h1>
+        <p class="marca-frase" data-marca="frase">Estágios no mercado financeiro, num só lugar</p>
+      </div>
+      <button id="abrir-perfil" type="button" class="botao botao-primario" aria-haspopup="dialog">
+        Meu perfil <span id="perfil-estado" class="perfil-estado" hidden>ativo</span>
+      </button>
+    </div>
   </header>
 
-  <main>
-    <!-- Meu perfil: o JavaScript monta as opções com as áreas, cidades e tipos que existem nas vagas -->
-    <details class="perfil" id="perfil">
-      <summary>Meu perfil <span id="perfil-estado" class="perfil-estado"></span></summary>
-      <div class="perfil-corpo">
-        <p class="perfil-ajuda">Diga o que você procura: mostramos só as vagas que combinam, com as mais relevantes primeiro (você pode voltar a ver todas quando quiser). Fica salvo só neste navegador.</p>
+  <main class="conteudo">
+    <p id="saudacao" class="saudacao" hidden></p>
 
-        <label class="perfil-texto">Seu nome (opcional)
-          <input id="perfil-nome" type="text" maxlength="60" autocomplete="off" placeholder="Como podemos te chamar?">
+    <!-- Busca e filtros rápidos. O JavaScript preenche as opções com os valores que existem nas vagas. -->
+    <section class="busca" aria-label="Buscar e filtrar vagas">
+      <label class="campo-busca">
+        <span class="sr-only">Buscar por cargo ou empresa</span>
+        <input id="busca" type="search" maxlength="80" autocomplete="off" placeholder="Buscar por cargo ou empresa">
+      </label>
+
+      <div class="filtros-rapidos">
+        <label class="campo">
+          <span class="campo-rotulo">Área</span>
+          <select id="filtro-categoria"><option value="">Todas</option></select>
         </label>
-
-        <fieldset class="perfil-grupo">
-          <legend>Categorias de área de interesse</legend>
-          <div id="perfil-categorias" class="opcoes"></div>
-          <p class="perfil-dica">Vagas de área "Diversas" aparecem em qualquer categoria marcada.</p>
-        </fieldset>
-
-        <fieldset class="perfil-grupo">
-          <legend>Cidades de interesse</legend>
-          <div id="perfil-cidades" class="opcoes"></div>
-        </fieldset>
-
-        <fieldset class="perfil-grupo">
-          <legend>Tipos de empresa de interesse</legend>
-          <div id="perfil-tipos" class="opcoes"></div>
-        </fieldset>
-
-        <fieldset class="perfil-grupo">
-          <legend>Modalidade preferida (nenhuma marcada = sem preferência)</legend>
-          <div id="perfil-modalidades" class="opcoes"></div>
-          <p class="perfil-dica">Vagas sem modalidade informada continuam aparecendo, com a indicação "modalidade não informada".</p>
-        </fieldset>
-
-        <label class="perfil-texto">Palavras-chave (opcional)
-          <input id="perfil-palavras" type="text" maxlength="200" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
+        <label class="campo">
+          <span class="campo-rotulo">Cidade</span>
+          <select id="filtro-cidade"><option value="">Todas</option></select>
         </label>
-
-        <fieldset class="perfil-grupo">
-          <legend>Meu currículo</legend>
-          <p class="aviso-curriculo">Seu currículo fica só neste navegador. Nada é enviado a servidor.</p>
-          <label class="perfil-texto">Cole aqui o texto do seu currículo (até 15.000 caracteres)
-            <textarea id="perfil-curriculo" rows="8" maxlength="15000" autocomplete="off" spellcheck="false" placeholder="Cole o texto do seu currículo. Ele é usado só para montar o prompt de &quot;Preparar candidatura&quot;."></textarea>
-          </label>
-          <p id="curriculo-contador" class="curriculo-contador" aria-live="polite">0 / 15.000 caracteres</p>
-          <div class="curriculo-arquivo">
-            <button id="botao-anexar-curriculo" type="button" class="botao-limpar-perfil">Anexar currículo (PDF ou Word .docx)</button>
-            <input id="arquivo-curriculo" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
-            <p class="perfil-dica">Até 5 MB. O texto é extraído aqui no navegador e vai para o campo acima, onde você pode revisar e editar. O arquivo fica guardado só neste navegador, para você baixar na hora de se candidatar.</p>
-            <div id="arquivo-guardado" class="arquivo-guardado" hidden>
-              <p id="arquivo-guardado-info" class="arquivo-guardado-info"></p>
-              <button id="botao-remover-arquivo" type="button" class="botao-limpar-perfil">Remover arquivo</button>
-            </div>
-            <p id="arquivo-aviso-banco" class="aviso-perfil" hidden>Não foi possível guardar o arquivo neste navegador (armazenamento indisponível). Ele vale só enquanto esta página estiver aberta; o texto do currículo continua funcionando.</p>
-          </div>
-          <div class="perfil-backup">
-            <button id="botao-exportar-perfil" type="button" class="botao-limpar-perfil">Exportar perfil (arquivo)</button>
-            <button id="botao-importar-perfil" type="button" class="botao-limpar-perfil">Importar perfil (arquivo)</button>
-            <input id="arquivo-perfil" type="file" accept=".json,application/json" hidden>
-          </div>
-          <p class="perfil-dica">O backup (exportar e importar) guarda só o texto do currículo, não o arquivo PDF ou Word anexado. O arquivo exportado contém seu currículo: guarde-o com cuidado e não o publique.</p>
-          <p id="perfil-mensagem" class="perfil-mensagem" role="status" hidden></p>
-        </fieldset>
-
-        <p id="aviso-perfil" class="aviso-perfil" hidden>
-          Não foi possível salvar o perfil neste navegador (o armazenamento está bloqueado).
-          Ele continua valendo enquanto esta página estiver aberta.
-        </p>
-
-        <button id="botao-limpar-perfil" type="button" class="botao-limpar-perfil">Limpar meu perfil</button>
-        <p class="perfil-dica">Apaga tudo deste navegador, inclusive o currículo e o arquivo anexado. Exporte antes se quiser guardar uma cópia.</p>
+        <label class="campo">
+          <span class="campo-rotulo">Modalidade</span>
+          <select id="filtro-modalidade"><option value="">Todas</option></select>
+        </label>
+        <button id="botao-mais-filtros" type="button" class="botao botao-contorno" aria-expanded="false" aria-controls="mais-filtros">Mais filtros</button>
       </div>
-    </details>
 
-    <!-- Filtros: o JavaScript preenche as opções de área, cidade e fonte com os valores que existem nas vagas -->
-    <section class="filtros" aria-label="Filtros">
-      <label>Área
-        <select id="filtro-area">
-          <option value="">Todas as áreas</option>
-        </select>
-      </label>
-
-      <label>Cidade
-        <select id="filtro-cidade">
-          <option value="">Todas as cidades</option>
-        </select>
-      </label>
-
-      <label>Fonte
-        <select id="filtro-fonte">
-          <option value="">Todas as fontes</option>
-        </select>
-      </label>
-
-      <button id="botao-limpar" type="button">Limpar filtros</button>
+      <div id="mais-filtros" class="mais-filtros" hidden>
+        <label class="campo">
+          <span class="campo-rotulo">Tipo de empresa</span>
+          <select id="filtro-tipo"><option value="">Todos</option></select>
+        </label>
+        <label class="campo">
+          <span class="campo-rotulo">Fonte</span>
+          <select id="filtro-fonte"><option value="">Todas</option></select>
+        </label>
+        <label class="campo campo-largo">
+          <span class="campo-rotulo">Palavras-chave</span>
+          <input id="filtro-palavras" type="text" maxlength="100" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
+          <span class="campo-dica">Mostra vagas com qualquer uma das palavras no cargo ou na empresa.</span>
+        </label>
+      </div>
     </section>
 
-    <!-- Faixa do filtro do perfil: mostra o que está filtrando e deixa desligar/ligar sem apagar o perfil -->
-    <div id="faixa-filtro" class="faixa-filtro" hidden>
-      <p id="faixa-texto" class="faixa-texto"></p>
-      <button id="faixa-botao" type="button" class="botao-faixa"></button>
-    </div>
-
-    <div class="barra-lista">
-      <p id="contador" aria-live="polite"></p>
-      <label class="ordenar">Ordenar:
+    <div class="resumo">
+      <p id="contador" class="resumo-contador" aria-live="polite"></p>
+      <label class="ordenar">
+        <span class="campo-rotulo">Ordenar</span>
         <select id="ordenar">
           <option value="relevancia">Relevância</option>
           <option value="recentes">Mais recentes</option>
@@ -124,124 +82,281 @@
         </select>
       </label>
     </div>
-    <div id="mensagem-vazio" class="mensagem-vazio" hidden>
-      <p id="mensagem-vazio-texto"></p>
-      <button id="botao-mostrar-todas" type="button" class="botao-faixa" hidden>Mostrar todas as vagas</button>
+
+    <!-- Filtros ativos como etiquetas removíveis -->
+    <div id="chips" class="chips-linha" hidden>
+      <ul id="chips-lista" class="chips" aria-label="Filtros ativos"></ul>
+      <button id="limpar-tudo" type="button" class="botao-link">Limpar tudo</button>
     </div>
-    <section id="lista-vagas" class="lista"></section>
+
+    <div id="mensagem-vazio" class="vazio" hidden>
+      <p class="vazio-titulo">Nenhuma vaga com esses filtros</p>
+      <p id="mensagem-vazio-texto" class="vazio-dica"></p>
+      <button id="botao-limpar-filtros" type="button" class="botao botao-primario">Limpar filtros</button>
+    </div>
+
+    <section id="lista-vagas" class="lista" aria-label="Vagas"></section>
   </main>
 
   <footer class="rodape">
-    Este site apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão;
-    a candidatura é feita na página original.
-    <br>Sem login e sem coleta de dados: seu perfil (inclusive o nome, o currículo e o arquivo anexado, se você os informar) fica só neste navegador e nada é enviado a nenhum servidor.
+    <div class="conteudo">
+      <p><strong data-marca="nome">Largada Fin</strong> apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão; a candidatura é feita na página original.</p>
+      <p>Sem login e sem coleta de dados: seu perfil (inclusive o nome, o currículo e o arquivo anexado, se você os informar) fica só neste navegador e nada é enviado a nenhum servidor.</p>
+    </div>
   </footer>
 
-  <!-- Janela "Preparar candidatura": o JavaScript preenche os textos (sempre como texto puro) -->
-  <dialog id="janela-candidatura" class="janela" aria-labelledby="cand-titulo">
-    <div class="janela-conteudo">
-      <div class="janela-topo">
-        <h2 id="cand-titulo">Preparar candidatura</h2>
-        <button id="cand-fechar" type="button" class="botao-faixa">Fechar</button>
-      </div>
-      <p id="cand-vaga" class="cand-vaga"></p>
-      <button id="cand-reescrever" type="button" class="botao-secundario botao-reescrever">Reescrever currículo para esta vaga</button>
+  <!-- ===== Meu perfil: painel lateral no desktop, tela cheia no celular ===== -->
+  <dialog id="painel-perfil" class="painel" aria-labelledby="perfil-titulo">
+    <div class="painel-caixa">
+      <header class="painel-topo">
+        <h2 id="perfil-titulo">Meu perfil</h2>
+        <button id="perfil-fechar" type="button" class="botao-icone" aria-label="Fechar Meu perfil">&times;</button>
+      </header>
 
-      <div id="cand-sem-curriculo" hidden>
-        <p>Para preparar a candidatura, cole o texto do seu currículo no painel <strong>Meu perfil &rarr; Meu currículo</strong>. Ele fica só neste navegador e nada é enviado a servidor.</p>
-        <button id="cand-ir-curriculo" type="button" class="botao-email">Ir para Meu currículo</button>
+      <div class="abas" role="tablist" aria-label="Partes do perfil">
+        <button id="aba-busco" type="button" class="aba" role="tab" aria-selected="true" aria-controls="painel-busco">O que busco</button>
+        <button id="aba-curriculo" type="button" class="aba" role="tab" aria-selected="false" aria-controls="painel-curriculo" tabindex="-1">Meu currículo</button>
       </div>
 
-      <div id="cand-com-curriculo" hidden>
-        <h3>1. Copie o prompt e cole na sua IA</h3>
-        <p class="perfil-dica">Use o ChatGPT, o Claude ou outra IA de sua preferência. O prompt já tem os dados da vaga e o seu currículo.</p>
-        <textarea id="cand-prompt" class="cand-texto" rows="7" readonly aria-label="Prompt para copiar"></textarea>
-        <button id="cand-copiar-prompt" type="button" class="botao-secundario">Copiar prompt</button>
+      <div class="painel-corpo">
+        <!-- Aba 1: o que busco (as opções são montadas pelo JavaScript) -->
+        <section id="painel-busco" class="aba-painel" role="tabpanel" aria-labelledby="aba-busco" tabindex="0">
+          <label class="campo">
+            <span class="campo-rotulo">Seu nome (opcional)</span>
+            <input id="perfil-nome" type="text" maxlength="60" autocomplete="off" placeholder="Como podemos te chamar?">
+          </label>
 
-        <h3 id="cand-titulo-resposta">2. Cole aqui o e-mail que a IA escreveu</h3>
-        <textarea id="cand-resposta" class="cand-texto" rows="8" aria-labelledby="cand-titulo-resposta"></textarea>
-        <p id="cand-aviso-tamanho" class="aviso-perfil" role="status" hidden>
-          O texto é longo para abrir direto no app de e-mail (limite de cerca de 1.800 caracteres no link).
-          Use "Copiar e-mail" e cole o texto no seu app de e-mail.
+          <fieldset class="grupo">
+            <legend>Áreas de interesse</legend>
+            <div id="perfil-categorias" class="opcoes"></div>
+            <p class="dica">Vagas de "Várias áreas" aparecem em qualquer área marcada.</p>
+          </fieldset>
+
+          <fieldset class="grupo">
+            <legend>Cidades</legend>
+            <div id="perfil-cidades" class="opcoes"></div>
+          </fieldset>
+
+          <fieldset class="grupo">
+            <legend>Tipos de empresa</legend>
+            <div id="perfil-tipos" class="opcoes"></div>
+          </fieldset>
+
+          <fieldset class="grupo">
+            <legend>Modalidade</legend>
+            <div id="perfil-modalidades" class="opcoes"></div>
+            <p class="dica">Vagas sem modalidade informada continuam aparecendo.</p>
+          </fieldset>
+
+          <label class="campo">
+            <span class="campo-rotulo">Palavras-chave (opcional)</span>
+            <input id="perfil-palavras" type="text" maxlength="200" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
+            <span class="campo-dica">Só ajudam a ordenar as vagas; não escondem nenhuma.</span>
+          </label>
+        </section>
+
+        <!-- Aba 2: meu currículo -->
+        <section id="painel-curriculo" class="aba-painel" role="tabpanel" aria-labelledby="aba-curriculo" tabindex="0" hidden>
+          <div class="estado-curriculo">
+            <p id="curriculo-estado" class="estado-linha" aria-live="polite">Nenhum currículo salvo.</p>
+            <button id="botao-remover-arquivo" type="button" class="botao-link" hidden>Remover arquivo</button>
+          </div>
+
+          <button id="botao-anexar-curriculo" type="button" class="botao botao-primario botao-bloco">Anexar PDF ou Word</button>
+          <input id="arquivo-curriculo" type="file" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+          <p class="dica">PDF ou Word (.docx), até 5 MB. O texto é extraído aqui, no navegador.</p>
+
+          <p id="arquivo-aviso-banco" class="aviso" hidden>Não foi possível guardar o arquivo neste navegador. Ele vale só enquanto esta página estiver aberta; o texto continua funcionando.</p>
+          <p id="perfil-mensagem" class="mensagem" role="status" hidden></p>
+
+          <!-- O texto extraído fica aqui para conferir e editar. Se ainda não há texto, fica recolhido como "colar manualmente". -->
+          <details id="curriculo-manual" class="recolhivel">
+            <summary id="curriculo-manual-resumo">Colar texto manualmente</summary>
+            <label class="campo">
+              <span class="campo-rotulo" id="curriculo-rotulo">Texto do currículo</span>
+              <textarea id="perfil-curriculo" rows="10" maxlength="15000" autocomplete="off" spellcheck="false" placeholder="Cole aqui o texto do seu currículo."></textarea>
+            </label>
+            <p id="curriculo-contador" class="contador-texto" aria-live="polite">0 / 15.000 caracteres</p>
+          </details>
+        </section>
+
+        <p id="aviso-perfil" class="aviso" hidden>
+          Não foi possível salvar o perfil neste navegador (o armazenamento está bloqueado).
+          Ele continua valendo enquanto esta página estiver aberta.
         </p>
-        <div class="email-botoes">
-          <a id="cand-escrever" class="botao-email" href="#">Escrever e-mail</a>
-          <button id="cand-copiar-resposta" type="button" class="botao-secundario">Copiar e-mail</button>
-          <a id="cand-abrir-vaga" class="botao-vaga" target="_blank" rel="noopener noreferrer" hidden>Abrir vaga e se candidatar</a>
-        </div>
+
+        <details class="recolhivel mais-opcoes">
+          <summary>Mais opções</summary>
+          <div class="mais-opcoes-corpo">
+            <div class="botoes-linha">
+              <button id="botao-exportar-perfil" type="button" class="botao botao-contorno">Exportar perfil</button>
+              <button id="botao-importar-perfil" type="button" class="botao botao-contorno">Importar perfil</button>
+            </div>
+            <input id="arquivo-perfil" type="file" accept=".json,application/json" hidden>
+            <p class="dica">O backup guarda só o texto do currículo, não o arquivo PDF ou Word. O arquivo exportado contém seu currículo: não o publique.</p>
+            <button id="botao-limpar-perfil" type="button" class="botao botao-perigo">Limpar meu perfil</button>
+            <p class="dica">Apaga tudo deste navegador, inclusive o currículo e o arquivo anexado.</p>
+          </div>
+        </details>
       </div>
 
-      <div id="cand-anexo" hidden>
-        <h3>3. Anexe seu currículo</h3>
-        <p class="aviso-perfil cand-aviso">O botão Escrever e-mail não consegue anexar arquivos. Anexe o currículo baixado, ou use Compartilhar com anexo no celular.</p>
-        <div id="cand-destinatarios" class="cand-linha" hidden>
-          <p id="cand-destinatarios-texto"></p>
-          <button id="cand-copiar-destinatarios" type="button" class="botao-secundario">Copiar</button>
-        </div>
-        <div id="cand-assunto" class="cand-linha" hidden>
-          <p id="cand-assunto-texto"></p>
-          <button id="cand-copiar-assunto" type="button" class="botao-secundario">Copiar</button>
-        </div>
-        <p id="cand-sem-arquivo" class="perfil-dica" hidden>Você ainda não anexou um arquivo. Em Meu perfil &rarr; Meu currículo, use "Anexar currículo (PDF ou Word .docx)".</p>
-        <div id="cand-botoes-arquivo" class="email-botoes" hidden>
-          <button id="cand-baixar" type="button" class="botao-email">Baixar meu currículo</button>
-          <button id="cand-compartilhar" type="button" class="botao-secundario" hidden>Compartilhar com anexo</button>
-        </div>
-        <p id="cand-mensagem" class="perfil-mensagem" role="status" hidden></p>
-      </div>
-
-      <p class="aviso-perfil cand-aviso">Confira o texto antes de enviar.</p>
+      <footer class="painel-rodape">
+        <p class="privacidade">Seu perfil e currículo ficam só neste navegador.</p>
+      </footer>
     </div>
   </dialog>
 
-  <!-- Os arquivos de regras e de dados vêm primeiro: criam as listas que o app.js usa -->
-
-  <dialog id="janela-reescrita" class="janela" aria-labelledby="re-titulo">
-    <div class="janela-conteudo">
-      <div class="janela-topo">
-        <h2 id="re-titulo">Reescrever currículo para esta vaga</h2>
-        <button id="re-fechar" type="button" class="botao-faixa">Fechar</button>
-      </div>
-      <p id="re-vaga" class="cand-vaga"></p>
-
-      <div id="re-sem-curriculo" hidden>
-        <p>Para reescrever o currículo, cole o texto dele (ou anexe um PDF/Word) no painel <strong>Meu perfil &rarr; Meu currículo</strong>. Ele fica só neste navegador e nada é enviado a servidor.</p>
-        <button id="re-ir-curriculo" type="button" class="botao-email">Ir para Meu currículo</button>
-      </div>
-
-      <div id="re-com-curriculo" hidden>
-        <h3>1. Copie o prompt e cole na sua IA</h3>
-        <p class="perfil-dica">Use o ChatGPT, o Claude ou outra IA de sua preferência. O prompt pede para ela usar só o que está no seu currículo, sem inventar nada.</p>
-        <textarea id="re-prompt" class="cand-texto" rows="7" readonly aria-label="Prompt para copiar"></textarea>
-        <button id="re-copiar-prompt" type="button" class="botao-secundario">Copiar prompt</button>
-
-        <h3 id="re-titulo-resposta">2. Cole aqui a resposta da IA</h3>
-        <textarea id="re-resposta" class="cand-texto" rows="8" maxlength="30000" aria-labelledby="re-titulo-resposta" spellcheck="false"></textarea>
-        <button id="re-montar" type="button" class="botao-email">Montar currículo</button>
-        <p id="re-aviso" class="perfil-mensagem" role="status" hidden></p>
-
-        <div id="re-original" hidden>
-          <h3>Resposta original da IA</h3>
-          <pre id="re-original-texto" class="re-original"></pre>
+  <!-- ===== Candidatura em passos ===== -->
+  <dialog id="janela-candidatura" class="janela" aria-labelledby="cand-titulo">
+    <div class="janela-caixa">
+      <header class="janela-topo">
+        <div class="janela-titulos">
+          <h2 id="cand-titulo">Candidatar-se</h2>
+          <p id="cand-vaga" class="janela-sub"></p>
         </div>
+        <button id="cand-fechar" type="button" class="botao-icone" aria-label="Fechar">&times;</button>
+      </header>
 
-        <div id="re-resultado" hidden>
-          <h3>3. Revise e baixe</h3>
-          <p class="perfil-dica">Clique no texto da página abaixo para corrigir o que quiser. Confira tudo: o currículo deve ter só informações verdadeiras.</p>
-          <div id="re-pagina" class="cv-pagina" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Currículo (editável)" spellcheck="false"></div>
-          <p id="re-aviso-pagina" class="aviso-perfil" role="status" hidden></p>
-          <div class="email-botoes">
-            <button id="re-baixar-pdf" type="button" class="botao-email">Baixar PDF</button>
-            <button id="re-copiar-texto" type="button" class="botao-secundario">Copiar texto</button>
+      <ol id="cand-passos" class="passos" aria-label="Passos da candidatura">
+        <li class="passo-item"><span class="passo-numero">1</span><span class="passo-nome">Currículo</span></li>
+        <li class="passo-item"><span class="passo-numero">2</span><span id="passo-nome-2" class="passo-nome">E-mail</span></li>
+        <li class="passo-item"><span class="passo-numero">3</span><span class="passo-nome">Enviar</span></li>
+      </ol>
+
+      <div class="janela-corpo">
+        <!-- Passo 1: currículo -->
+        <section id="passo-1" class="passo" aria-labelledby="passo-1-titulo">
+          <h3 id="passo-1-titulo" tabindex="-1">1. Currículo</h3>
+          <p class="instrucao">Escolha qual currículo você vai usar nesta vaga.</p>
+
+          <div id="re-sem-curriculo" class="caixa-aviso" hidden>
+            <p>Você ainda não salvou um currículo. Anexe um PDF ou Word (ou cole o texto) em <strong>Meu perfil &rarr; Meu currículo</strong>.</p>
+            <button id="re-ir-curriculo" type="button" class="botao botao-primario">Ir para Meu currículo</button>
           </div>
-          <p class="perfil-dica">Para salvar como PDF: na janela de impressão que abrir, escolha "Salvar como PDF" como destino e clique em Salvar.</p>
-          <div id="re-lacunas" class="re-lacunas" hidden>
-            <h3>Sugestões para você avaliar (não vão para o PDF)</h3>
-            <p class="perfil-dica">A IA listou o que esta área costuma valorizar e o currículo não mostra. Acrescente só se for verdade.</p>
-            <ul id="re-lacunas-lista"></ul>
+
+          <div id="re-com-curriculo" hidden>
+            <div class="opcoes-cartoes" role="radiogroup" aria-label="Qual currículo usar">
+              <label class="cartao-opcao">
+                <input type="radio" name="modo-curriculo" value="como-esta" checked>
+                <span class="cartao-opcao-texto"><strong>Usar meu currículo como está</strong><small id="cand-estado-curriculo"></small></span>
+              </label>
+              <label class="cartao-opcao">
+                <input type="radio" name="modo-curriculo" value="adaptar">
+                <span class="cartao-opcao-texto"><strong>Adaptar para esta vaga</strong><small>A IA reescreve com foco na área, usando só o que já está no seu currículo.</small></span>
+              </label>
+            </div>
+
+            <div id="modo-como-esta" class="modo">
+              <p id="cand-sem-arquivo-1" class="dica" hidden>Você salvou só o texto do currículo. Para baixar ou compartilhar um arquivo, anexe um PDF ou Word em Meu perfil.</p>
+              <button id="cand-baixar-1" type="button" class="botao botao-contorno" hidden>Baixar meu currículo</button>
+            </div>
+
+            <div id="modo-adaptar" class="modo" hidden>
+              <h4>a) Copie o prompt e cole na sua IA</h4>
+              <p class="dica">Use o ChatGPT, o Claude ou outra IA. O prompt pede para ela não inventar nada.</p>
+              <textarea id="re-prompt" class="area-texto" rows="6" readonly aria-label="Prompt para copiar"></textarea>
+              <button id="re-copiar-prompt" type="button" class="botao botao-contorno">Copiar prompt</button>
+
+              <h4 id="re-titulo-resposta">b) Cole aqui a resposta da IA</h4>
+              <textarea id="re-resposta" class="area-texto" rows="6" maxlength="30000" aria-labelledby="re-titulo-resposta" spellcheck="false"></textarea>
+              <button id="re-montar" type="button" class="botao botao-primario">Montar currículo</button>
+              <p id="re-aviso" class="mensagem" role="status" hidden></p>
+
+              <div id="re-original" hidden>
+                <h4>Resposta original da IA</h4>
+                <pre id="re-original-texto" class="re-original"></pre>
+              </div>
+
+              <div id="re-resultado" hidden>
+                <h4>c) Revise e baixe</h4>
+                <p class="dica">Clique no texto da página para corrigir. O currículo deve ter só informações verdadeiras.</p>
+                <div id="re-pagina" class="cv-pagina" contenteditable="true" role="textbox" aria-multiline="true" aria-label="Currículo (editável)" spellcheck="false"></div>
+                <p id="re-aviso-pagina" class="aviso" role="status" hidden></p>
+                <div class="botoes-linha">
+                  <button id="re-baixar-pdf" type="button" class="botao botao-primario">Baixar PDF</button>
+                  <button id="re-copiar-texto" type="button" class="botao botao-contorno">Copiar texto</button>
+                </div>
+                <p class="dica">Na janela de impressão, escolha "Salvar como PDF" como destino e clique em Salvar.</p>
+                <div id="re-lacunas" class="re-lacunas" hidden>
+                  <h4>Sugestões para você avaliar (não vão para o PDF)</h4>
+                  <p class="dica">O que esta área costuma valorizar e o currículo não mostra. Acrescente só se for verdade.</p>
+                  <ul id="re-lacunas-lista"></ul>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        <!-- Passo 2: e-mail (vaga com e-mail) ou resumo para o formulário (vaga só com link) -->
+        <section id="passo-2" class="passo" aria-labelledby="passo-2-titulo" hidden>
+          <h3 id="passo-2-titulo" tabindex="-1">2. E-mail</h3>
+          <p id="cand-instrucao-2" class="instrucao"></p>
+
+          <div id="cand-email-dados" hidden>
+            <div id="cand-destinatarios" class="linha-copiar-grupo"></div>
+            <div id="cand-assunto" class="linha-copiar" hidden>
+              <p id="cand-assunto-texto" class="linha-copiar-texto"></p>
+              <button id="cand-copiar-assunto" type="button" class="botao botao-contorno botao-pequeno" aria-label="Copiar assunto">Copiar</button>
+            </div>
+          </div>
+
+          <div id="cand-sem-curriculo-2" class="caixa-aviso" hidden>
+            <p>Sem currículo salvo não dá para montar o prompt. Você pode escrever o texto por conta própria no campo abaixo ou voltar ao passo 1.</p>
+          </div>
+          <div id="cand-prompt-bloco">
+            <h4 id="cand-titulo-prompt">Copie o prompt e cole na sua IA</h4>
+            <textarea id="cand-prompt" class="area-texto" rows="6" readonly aria-labelledby="cand-titulo-prompt"></textarea>
+            <button id="cand-copiar-prompt" type="button" class="botao botao-contorno">Copiar prompt</button>
+          </div>
+          <h4 id="cand-titulo-resposta">Cole aqui o texto escrito pela IA</h4>
+          <textarea id="cand-resposta" class="area-texto" rows="7" aria-labelledby="cand-titulo-resposta"></textarea>
+        </section>
+
+        <!-- Passo 3: enviar -->
+        <section id="passo-3" class="passo" aria-labelledby="passo-3-titulo" hidden>
+          <h3 id="passo-3-titulo" tabindex="-1">3. Enviar</h3>
+          <p class="aviso aviso-forte">Confira tudo antes de enviar.</p>
+          <p id="cand-instrucao-3" class="instrucao"></p>
+
+          <div id="cand-enviar-email" hidden>
+            <div class="botoes-linha">
+              <a id="cand-escrever" class="botao botao-primario" href="#">Escrever e-mail</a>
+              <button id="cand-copiar-resposta" type="button" class="botao botao-contorno">Copiar e-mail</button>
+            </div>
+            <p class="dica">O botão Escrever e-mail não consegue anexar arquivos. Anexe o currículo baixado, ou use Compartilhar com anexo no celular.</p>
+            <p id="cand-aviso-tamanho" class="aviso" role="status" hidden>
+              O texto é longo para abrir direto no app de e-mail (limite de cerca de 1.800 caracteres no link).
+              Use "Copiar e-mail" e cole o texto no seu app de e-mail.
+            </p>
+          </div>
+
+          <div id="cand-enviar-resumo" hidden>
+            <h4>Texto para o formulário</h4>
+            <textarea id="cand-resumo" class="area-texto" rows="6" readonly aria-label="Texto para copiar"></textarea>
+            <button id="cand-copiar-resumo" type="button" class="botao botao-contorno">Copiar texto</button>
+            <p id="cand-sem-resumo" class="dica" hidden>Ainda não há texto. Volte ao passo 2 para gerar um com a sua IA (opcional).</p>
+          </div>
+
+          <div id="cand-enviar-arquivo">
+            <h4>Seu currículo</h4>
+            <p id="cand-sem-arquivo" class="dica" hidden>Você ainda não anexou um arquivo. Em Meu perfil &rarr; Meu currículo, use "Anexar PDF ou Word".</p>
+            <div id="cand-botoes-arquivo" class="botoes-linha" hidden>
+              <button id="cand-baixar" type="button" class="botao botao-contorno">Baixar meu currículo</button>
+              <button id="cand-compartilhar" type="button" class="botao botao-contorno" hidden>Compartilhar com anexo</button>
+            </div>
+          </div>
+
+          <div id="cand-enviar-link" hidden>
+            <a id="cand-abrir-vaga" class="botao botao-primario" target="_blank" rel="noopener noreferrer" href="#">Abrir vaga</a>
+          </div>
+          <p id="cand-mensagem" class="mensagem" role="status" hidden></p>
+        </section>
       </div>
+
+      <footer class="janela-pe">
+        <button id="cand-voltar" type="button" class="botao botao-contorno">Voltar</button>
+        <button id="cand-proximo" type="button" class="botao botao-primario">Próximo</button>
+      </footer>
     </div>
   </dialog>
 
@@ -249,12 +364,14 @@
   <div id="area-impressao" aria-hidden="true"></div>
   <div id="medida-cv" class="cv-medida" aria-hidden="true"></div>
 
+  <script src="js/marca.js"></script>
   <script src="js/regras.js"></script>
   <script src="data/vagas.js"></script>
   <script src="data/vagas-auto.js"></script>
   <script src="data/status-links.js"></script>
   <script src="js/arquivo.js"></script>
   <script src="js/extrair.js"></script>
+  <script src="js/candidatura.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

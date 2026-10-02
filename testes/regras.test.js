@@ -996,3 +996,99 @@ test("títulos das seções e nome do PDF", () => {
   assert.strictEqual(R.nomeCurriculoPdf("../../x\n<b>", "Diversas (Investment Banking, Research, Risco, Asset)").includes("/"), false);
   assert.ok(R.nomeCurriculoPdf("x".repeat(200), "y".repeat(200)).length <= 3 + 40 + 1 + 30);
 });
+
+// ---------------- redesign (Etapa 10): filtros rápidos, prazo e marca ----------------
+const hojeFic = "2026-10-02";
+const vf = (extra) => vaga(Object.assign({ titulo: "Estágio em Análise de Crédito", empresa: "Banco Fictício", area: "Crédito", cidade: "São Paulo", tipoEmpresa: "Banco", fonte: "Polifinance" }, extra));
+
+test("filtros rápidos: busca por cargo ou empresa (todas as palavras, sem acento nem maiúsculas)", () => {
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "ANALISE credito" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "fictício banco" }), true);        // cargo + empresa juntos
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "credito m&a" }), false);          // uma palavra não bate
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "  " }), true);                    // busca vazia não filtra
+  assert.strictEqual(R.passaFiltrosPagina(vf({ area: "M&A" }), { busca: "m&a" }), false);   // busca não olha área
+});
+
+test("filtros rápidos: categoria de área, cidade, tipo, fonte e modalidade", () => {
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { categoria: RC }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { categoria: INV }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf({ area: "Diversas" }), { categoria: INV }), true);   // "Diversas" passa em qualquer categoria
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { cidade: "Rio de Janeiro" }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { tipo: "Banco" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { tipo: "Gestora" }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { fonte: "LinkedIn" }), false);
+  // modalidade: igual passa, diferente não; vaga SEM modalidade informada continua aparecendo
+  assert.strictEqual(R.passaFiltrosPagina(vf({ modalidade: "remoto" }), { modalidade: "remoto" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf({ modalidade: "presencial" }), { modalidade: "remoto" }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { modalidade: "remoto" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf({ modalidade: "home office" }), { modalidade: "remoto" }), true);  // valor desconhecido = não informada
+});
+
+test("filtros rápidos: palavras-chave (qualquer uma) e combinação de todos os filtros", () => {
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { palavras: "valuation, crédito" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { palavras: "valuation; m&a" }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "banco", categoria: RC, cidade: "São Paulo", tipo: "Banco", palavras: "credito" }), true);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), { busca: "banco", categoria: RC, cidade: "São Paulo", tipo: "Gestora" }), false);
+  assert.strictEqual(R.passaFiltrosPagina(vf(), undefined), true);
+  assert.deepStrictEqual(R.palavrasDeBusca("  Crédito,  M&A ; Análise "), ["credito", "m&a", "analise"]);
+  // combina com o filtro do perfil (interseção), como antes
+  const lista = [vf({ titulo: "A" }), vf({ titulo: "B", cidade: "Rio de Janeiro" })];
+  assert.deepStrictEqual(titulos(R.filtrarVagas(lista, { tipo: "Banco" }, perfil({ cidades: ["Rio de Janeiro"] }), true)), ["B"]);
+  assert.deepStrictEqual(titulos(R.filtrarVagas(lista, { tipo: "Banco" }, perfil({ cidades: ["Rio de Janeiro"] }), false)), ["A", "B"]);
+});
+
+test("prazo no cartão: texto e urgência (vermelho até 3 dias, âmbar até 7, depois normal; sem prazo = nada)", () => {
+  const p = (prazoInscricao) => R.situacaoPrazo({ prazoInscricao }, hojeFic);
+  assert.deepStrictEqual(p("2026-10-02"), { nivel: "urgente", texto: "Termina hoje" });
+  assert.deepStrictEqual(p("2026-10-03"), { nivel: "urgente", texto: "Termina amanhã" });
+  assert.deepStrictEqual(p("2026-10-05"), { nivel: "urgente", texto: "Termina em 3 dias" });
+  assert.deepStrictEqual(p("2026-10-06"), { nivel: "atencao", texto: "Termina em 4 dias" });
+  assert.deepStrictEqual(p("2026-10-09"), { nivel: "atencao", texto: "Termina em 7 dias" });
+  assert.deepStrictEqual(p("2026-10-10"), { nivel: "normal", texto: "Termina em 8 dias" });
+  assert.deepStrictEqual(p("2026-10-16"), { nivel: "normal", texto: "Termina em 14 dias" });
+  assert.deepStrictEqual(p("2026-10-17"), { nivel: "normal", texto: "Inscrições até 17/10/2026" });
+  assert.deepStrictEqual(p("2026-12-31"), { nivel: "normal", texto: "Inscrições até 31/12/2026" });
+  [undefined, "", "amanhã", "2026-10-01", 5, null].forEach((valor) => assert.deepStrictEqual(p(valor), { nivel: "", texto: "" }, String(valor)));   // sem prazo, inválido ou já vencido
+  assert.deepStrictEqual(R.situacaoPrazo({}, hojeFic), { nivel: "", texto: "" });
+  assert.deepStrictEqual(R.situacaoPrazo(null, hojeFic), { nivel: "", texto: "" });
+});
+
+test("marca: nome do site definido em um só lugar (js/marca.js) e HTML de reserva igual", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const { MARCA, tituloDaAba } = require("../js/marca.js");
+  assert.strictEqual(MARCA.nome, "Largada Fin");
+  assert.strictEqual(tituloDaAba(), "Largada Fin — Estágios no mercado financeiro, num só lugar");
+  assert.strictEqual(tituloDaAba("Adicionar vaga"), "Adicionar vaga — Largada Fin");
+  const lerHtml = (nome) => fs.readFileSync(path.join(__dirname, "..", nome), "utf8");
+  const index = lerHtml("index.html");
+  const adicionar = lerHtml("adicionar.html");
+  // textos de reserva (para quem não roda JavaScript, como buscadores) precisam ser iguais à marca
+  assert.ok(index.includes("<title>" + tituloDaAba() + "</title>"));
+  assert.ok(adicionar.includes("<title>" + tituloDaAba("Adicionar vaga") + "</title>"));
+  assert.ok(index.includes('<meta name="description" content="' + MARCA.descricao + '">'));
+  assert.ok(index.includes('<meta property="og:title" content="' + tituloDaAba() + '">'));
+  assert.ok(index.includes('<meta property="og:site_name" content="' + MARCA.nome + '">'));
+  assert.ok(index.includes('<span data-marca="nome">' + MARCA.nome + "</span>"));
+  assert.ok(index.includes('data-marca="frase">' + MARCA.frase + "<"));
+  // o nome antigo não pode sobrar em lugar nenhum dos arquivos do site
+  ["index.html", "adicionar.html", "js/app.js", "js/candidatura.js", "js/adicionar.js"].forEach((arq) => {
+    assert.ok(!/Estágios no Mercado Financeiro/.test(lerHtml(arq)), arq);
+  });
+});
+
+test("visual: sem fontes nem recursos externos (CSS e HTML só usam arquivos do próprio site)", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const ler = (nome) => fs.readFileSync(path.join(__dirname, "..", nome), "utf8");
+  const css = ler("css/estilo.css");
+  assert.ok(!/@import|url\(\s*["']?https?:|@font-face/i.test(css));
+  ["index.html", "adicionar.html"].forEach((arq) => {
+    const html = ler(arq);
+    assert.ok(!/<(script|link|img|iframe)[^>]+(src|href)=["']https?:/i.test(html), arq);
+  });
+  // variáveis de design definidas (cores, espaçamentos, tamanhos de texto) e modo escuro / movimento reduzido respeitados
+  ["--fundo", "--destaque", "--texto-2", "--e4", "--t-texto", "--r-m"].forEach((v) => assert.ok(css.includes(v + ":"), v));
+  assert.ok(css.includes("prefers-color-scheme: dark"));
+  assert.ok(css.includes("prefers-reduced-motion: reduce"));
+});

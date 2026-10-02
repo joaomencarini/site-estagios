@@ -345,10 +345,79 @@ function descreverFiltroPerfil(perfil) {
   return p.categorias.concat(p.cidades, p.tipos, p.modalidades.map(function (m) { return ROTULOS_MODALIDADE[m]; }));
 }
 
-// Filtros da própria página: área, cidade e fonte (valor vazio = não filtra)
+// Divide um texto de busca em palavras normalizadas (sem acento, minúsculas). Separa por espaço, vírgula ou ponto e vírgula.
+function palavrasDeBusca(texto) {
+  return normalizarTexto(texto).split(/[\s,;]+/).filter(function (p) { return p !== ""; });
+}
+
+// Filtros da própria página (valor vazio = não filtra). Todos combinam ("e"):
+// - area (texto exato da vaga), cidade, fonte, tipo (tipo de empresa): igualdade exata;
+// - categoria: categoria da área da vaga (vaga de área "Diversas" passa em qualquer categoria);
+// - modalidade: igual à da vaga; vaga SEM modalidade informada continua aparecendo (nunca se presume);
+// - busca: TODAS as palavras aparecem no título ou na empresa (sem acento nem maiúsculas);
+// - palavras: pelo menos UMA das palavras-chave aparece no título ou na empresa.
 function passaFiltrosPagina(vaga, filtros) {
   const f = filtros || {};
-  return (!f.area || vaga.area === f.area) && (!f.cidade || vaga.cidade === f.cidade) && (!f.fonte || vaga.fonte === f.fonte);
+  if (f.area && vaga.area !== f.area) {
+    return false;
+  }
+  if (f.cidade && vaga.cidade !== f.cidade) {
+    return false;
+  }
+  if (f.fonte && vaga.fonte !== f.fonte) {
+    return false;
+  }
+  if (f.tipo && vaga.tipoEmpresa !== f.tipo) {
+    return false;
+  }
+  if (f.categoria) {
+    const classe = classificarArea(vaga.area);
+    if (!classe.varias && classe.categoria !== f.categoria) {
+      return false;
+    }
+  }
+  if (f.modalidade) {
+    const daVaga = modalidadeDaVaga(vaga);
+    if (daVaga !== "" && daVaga !== modalidadePadrao(f.modalidade)) {
+      return false;
+    }
+  }
+  const texto = normalizarTexto(vaga.titulo + " " + vaga.empresa);
+  const busca = palavrasDeBusca(f.busca);
+  if (busca.length > 0 && !busca.every(function (p) { return texto.includes(p); })) {
+    return false;
+  }
+  const palavras = palavrasDeBusca(f.palavras);
+  if (palavras.length > 0 && !palavras.some(function (p) { return texto.includes(p); })) {
+    return false;
+  }
+  return true;
+}
+
+// Situação do prazo para o cartão: { nivel, texto }. nivel: "urgente" (até 3 dias), "atencao" (até 7 dias),
+// "normal" (mais longe) ou "" (sem prazo ou prazo inválido: nada a mostrar). Até 14 dias mostra "Termina em N dias";
+// depois, a data ("Inscrições até dd/mm/aaaa").
+function situacaoPrazo(vaga, hoje) {
+  const prazo = vaga && typeof vaga.prazoInscricao === "string" ? vaga.prazoInscricao : "";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(prazo) || !/^\d{4}-\d{2}-\d{2}$/.test(hoje)) {
+    return { nivel: "", texto: "" };
+  }
+  const dias = diasEntre(hoje, prazo);
+  if (dias < 0) {
+    return { nivel: "", texto: "" };
+  }
+  const nivel = dias <= 3 ? "urgente" : dias <= 7 ? "atencao" : "normal";
+  if (dias === 0) {
+    return { nivel: nivel, texto: "Termina hoje" };
+  }
+  if (dias === 1) {
+    return { nivel: nivel, texto: "Termina amanhã" };
+  }
+  if (dias <= 14) {
+    return { nivel: nivel, texto: "Termina em " + dias + " dias" };
+  }
+  const [ano, mes, dia] = prazo.split("-");
+  return { nivel: nivel, texto: "Inscrições até " + dia + "/" + mes + "/" + ano };
 }
 
 // Ordem de aplicação: 1) filtros da página (área, cidade, fonte); 2) filtro do perfil, se "aplicarPerfil".
@@ -954,5 +1023,5 @@ if (typeof module !== "undefined" && module.exports) {
     montarMailtoComCorpo, TAMANHO_MAXIMO_ARQUIVO, extensaoArquivo, validarArquivoCurriculo, limparNomeArquivo,
     detectarFormatoArquivo, conferirConteudoArquivo, formatarTamanho, formatarDataArquivo, prepararTextoExtraido,
     dadosCompartilhar, BLOCOS_CURRICULO, TAMANHO_MAXIMO_RESPOSTA, idiomaDaVaga, escaparMarcadoresResposta, montarPromptReescrita,
-    limparLinhaMarkdown, lerMarcadorLinha, linhasDeLista, lerRespostaCurriculo, rotuloBlocoCurriculo, nomeCurriculoPdf };
+    palavrasDeBusca, situacaoPrazo, limparLinhaMarkdown, lerMarcadorLinha, linhasDeLista, lerRespostaCurriculo, rotuloBlocoCurriculo, nomeCurriculoPdf };
 }

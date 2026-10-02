@@ -4,16 +4,21 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>Adicionar vaga</title>
+  <meta name="color-scheme" content="light dark">
+  <title>Adicionar vaga — Largada Fin</title>
   <link rel="stylesheet" href="css/estilo.css">
 </head>
 <body>
   <header class="topo">
-    <h1>Adicionar vaga</h1>
-    <p>Preencha os dados e copie o texto pronto para colar em data/vagas.js.</p>
+    <div class="conteudo topo-linha">
+      <div class="marca">
+        <h1 class="marca-nome">Adicionar vaga</h1>
+        <p class="marca-frase"><span data-marca="nome">Largada Fin</span> · copie o texto pronto para colar em data/vagas.js</p>
+      </div>
+    </div>
   </header>
 
-  <main>
+  <main class="conteudo tela-adicionar">
     <p class="aviso">
       <strong>Regra:</strong> coloque só os dados básicos e o link da vaga original.
       Nunca copie a descrição completa da vaga.
@@ -117,6 +122,7 @@
     <p><a href="index.html">← Voltar para a lista de vagas</a></p>
   </main>
 
+  <script src="js/marca.js"></script>
   <script src="js/regras.js"></script>
   <script src="js/adicionar.js"></script>
 </body>

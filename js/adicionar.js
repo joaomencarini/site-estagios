@@ -1,5 +1,7 @@
 // Gera o texto de uma vaga no formato certo para colar em data/vagas.js.
 
+aplicarMarca("Adicionar vaga");
+
 const formulario = document.getElementById("formulario");
 const erro = document.getElementById("erro");
 const resultado = document.getElementById("resultado");
