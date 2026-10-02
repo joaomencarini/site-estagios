@@ -261,4 +261,38 @@ const vagas = [
     emailCandidatura: "henrique.watanabe@rpacapital.com",
     dataPublicacao: "2026-09-23"
   },
+  {
+    titulo: "Estágio em M&A",
+    empresa: "Banco Haitong",
+    area: "M&A",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: "acenturione@haitongib.com.br",
+    assuntoEmail: "Estágio M&A",
+    dataPublicacao: "2026-10-01"
+  },
+  {
+    titulo: "Estágio em Investment Banking",
+    empresa: "Santander",
+    area: "Investment Banking",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: "lauren.wang@santander.com.br",
+    assuntoEmail: "Investment Banking Internship - Full Name (University)",
+    dataPublicacao: "2026-10-01",
+    prazoInscricao: "2026-10-25"
+  },
+  {
+    titulo: "Estágio em Fund Management",
+    empresa: "BlueOak Investments",
+    area: "Fund Management",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    emailCandidatura: "carreira@blueoak.com.br",
+    assuntoEmail: "(NOME COMPLETO) - Vaga Estagiário Fund Mgmt BlueOak",
+    dataPublicacao: "2026-10-01"
+  },
 ];
