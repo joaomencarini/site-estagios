@@ -1,0 +1,11 @@
+# SEGURANÇA: este repositório é público. Nunca versione currículo nem dados pessoais.
+# O botão "Exportar perfil (arquivo)" do site gera "perfil-estagios.json" (contém o currículo do usuário).
+perfil-estagios*.json
+*perfil*estagios*.json
+curriculo*
+curriculum*
+*curriculo*.pdf
+*curriculo*.docx
+cv-*.pdf
+cv_*.pdf
+*.cv.*

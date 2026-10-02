@@ -18,6 +18,24 @@ const textoPadraoSaudacao = saudacao.textContent;  // texto de sempre, usado qua
 const caixaNome = document.getElementById("perfil-nome");
 const caixaModalidades = document.getElementById("perfil-modalidades");
 const caixaPalavras = document.getElementById("perfil-palavras");
+const caixaCurriculo = document.getElementById("perfil-curriculo");
+const contadorCurriculo = document.getElementById("curriculo-contador");
+const mensagemPerfil = document.getElementById("perfil-mensagem");
+const botaoExportar = document.getElementById("botao-exportar-perfil");
+const botaoImportar = document.getElementById("botao-importar-perfil");
+const arquivoPerfil = document.getElementById("arquivo-perfil");
+const janela = document.getElementById("janela-candidatura");
+const candVaga = document.getElementById("cand-vaga");
+const candSemCurriculo = document.getElementById("cand-sem-curriculo");
+const candComCurriculo = document.getElementById("cand-com-curriculo");
+const candPrompt = document.getElementById("cand-prompt");
+const candTituloResposta = document.getElementById("cand-titulo-resposta");
+const candResposta = document.getElementById("cand-resposta");
+const candAvisoTamanho = document.getElementById("cand-aviso-tamanho");
+const candEscrever = document.getElementById("cand-escrever");
+const candCopiarResposta = document.getElementById("cand-copiar-resposta");
+const candAbrirVaga = document.getElementById("cand-abrir-vaga");
+let vagaEmPreparo = null;  // vaga da janela "Preparar candidatura" aberta agora
 const botaoLimparPerfil = document.getElementById("botao-limpar-perfil");
 const avisoPerfil = document.getElementById("aviso-perfil");
 const estadoPerfil = document.getElementById("perfil-estado");
@@ -267,6 +285,14 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
   if (emails.length > 0) {
     acoes.appendChild(criarBlocoEmail(vaga, emails));
   }
+  // "Preparar candidatura": só em vagas com e-mail válido ou link (abre a janela com o prompt para a IA)
+  if (tipoCandidatura(vaga) !== "") {
+    const preparar = criar("button", "botao-secundario botao-preparar", "Preparar candidatura");
+    preparar.type = "button";
+    preparar.setAttribute("aria-haspopup", "dialog");
+    preparar.addEventListener("click", function () { abrirJanelaCandidatura(vaga); });
+    acoes.appendChild(preparar);
+  }
   if (acoes.children.length > 0) {
     cartao.appendChild(acoes);
   }
@@ -390,7 +416,168 @@ function lerPerfilDaTela() {
   });
   novo.nome = caixaNome.value;
   novo.palavras = caixaPalavras.value;
+  novo.curriculo = caixaCurriculo.value;
   return sanitizarPerfil(novo);
+}
+
+// Monta (ou remonta) as caixinhas e os campos do painel a partir do perfil atual
+function montarPainelPerfil() {
+  [caixasPerfil.categorias, caixasPerfil.cidades, caixasPerfil.tipos, caixaModalidades].forEach(function (caixa) {
+    caixa.replaceChildren();
+  });
+  const porTextoPtBr = function (lista) {
+    return lista.sort(function (a, b) { return a.localeCompare(b, "pt-BR"); });
+  };
+  criarOpcoesPerfil("categorias", opcoesDoGrupo(categoriasDasVagas(vagasAtivas), perfil.categorias, function (lista) {
+    return NOMES_CATEGORIAS.filter(function (nome) { return lista.includes(nome); });  // ordem do mapa
+  }));
+  criarOpcoesPerfil("cidades", opcoesDoGrupo(valoresUnicos("cidade"), perfil.cidades, porTextoPtBr));
+  criarOpcoesPerfil("tipos", opcoesDoGrupo(valoresUnicos("tipoEmpresa"), perfil.tipos, porTextoPtBr));
+  criarOpcoesModalidade();
+  caixaNome.value = perfil.nome;
+  caixaPalavras.value = perfil.palavras;
+  caixaCurriculo.value = perfil.curriculo;
+  mostrarContadorCurriculo();
+}
+
+// ===== Meu currículo =====
+
+// Contador "1.234 / 15.000 caracteres" (com ponto de milhar)
+function mostrarContadorCurriculo() {
+  const comPonto = function (n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, "."); };
+  const usados = caixaCurriculo.value.length;
+  contadorCurriculo.textContent = usados > TAMANHO_MAXIMO_CURRICULO
+    ? "Passou do limite: só os primeiros " + comPonto(TAMANHO_MAXIMO_CURRICULO) + " caracteres serão usados."
+    : comPonto(usados) + " / " + comPonto(TAMANHO_MAXIMO_CURRICULO) + " caracteres";
+  contadorCurriculo.classList.toggle("no-limite", usados >= TAMANHO_MAXIMO_CURRICULO);
+}
+
+// Digitou ou colou o currículo: guarda (se o navegador deixar) e atualiza o contador.
+// (Não precisa redesenhar a lista: o currículo não muda filtro nem ordem.)
+function aoMudarCurriculo() {
+  perfil = lerPerfilDaTela();
+  avisoPerfil.hidden = salvarPerfil(armazenamento, perfil);
+  mostrarContadorCurriculo();
+}
+
+// Mensagem curta no painel (importar, exportar, limpar). Sempre texto puro.
+function mostrarMensagemPerfil(texto, ehErro) {
+  mensagemPerfil.hidden = false;
+  mensagemPerfil.textContent = texto;
+  mensagemPerfil.classList.toggle("perfil-mensagem-erro", ehErro === true);
+}
+
+// "Exportar perfil (arquivo)": baixa um JSON com o perfil e o currículo (tudo gerado aqui, nada é enviado)
+function exportarPerfil() {
+  const texto = montarExportacao(lerPerfilDaTela());
+  const url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "perfil-estagios.json";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  mostrarMensagemPerfil("Perfil exportado (perfil-estagios.json). O arquivo contém seu currículo: guarde-o com cuidado.", false);
+}
+
+// "Importar perfil (arquivo)": lê o arquivo escolhido, valida (tamanho e formato) e troca o perfil atual
+function importarPerfil(arquivo) {
+  if (!arquivo) {
+    return;
+  }
+  if (arquivo.size > 3 * TAMANHO_MAXIMO_IMPORTACAO) {
+    mostrarMensagemPerfil("Arquivo grande demais para ser um perfil deste site.", true);
+    return;
+  }
+  const leitor = new FileReader();
+  leitor.onerror = function () { mostrarMensagemPerfil("Não consegui ler o arquivo.", true); };
+  leitor.onload = function () {
+    const resultado = validarImportacao(String(leitor.result));
+    if (!resultado.ok) {
+      mostrarMensagemPerfil("Não importei: " + resultado.erro, true);
+      return;
+    }
+    perfil = resultado.perfil;
+    filtroPerfilPausado = false;
+    avisoPerfil.hidden = salvarPerfil(armazenamento, perfil);
+    montarPainelPerfil();
+    mostrarEstadoPerfil();
+    mostrarSaudacao();
+    mostrarVagas();
+    mostrarMensagemPerfil("Perfil importado.", false);
+  };
+  leitor.readAsText(arquivo);
+}
+
+// ===== Janela "Preparar candidatura" =====
+
+// Liga um botão a "copiar este texto" (o texto é pedido na hora do clique) e avisa "Copiado!" por 2 segundos
+function ligarBotaoCopiar(botao, obterTexto) {
+  botao.dataset.rotulo = botao.textContent;
+  botao.addEventListener("click", function () {
+    copiarTexto(obterTexto()).then(function (deuCerto) {
+      botao.textContent = deuCerto ? "Copiado!" : "Não foi possível copiar";
+      setTimeout(function () { botao.textContent = botao.dataset.rotulo; }, 2000);
+    });
+  });
+}
+
+// Atualiza o link "Escrever e-mail" com os destinatários, o assunto exigido e o texto colado.
+// Se o link passar do limite do mailto, desativa o botão e mostra o aviso (resta "Copiar e-mail").
+function atualizarEscrever() {
+  if (vagaEmPreparo === null || tipoCandidatura(vagaEmPreparo) !== "email") {
+    return;
+  }
+  const assunto = typeof vagaEmPreparo.assuntoEmail === "string" ? vagaEmPreparo.assuntoEmail.trim() : "";
+  const mailto = montarMailtoComCorpo(emailsValidos(vagaEmPreparo.emailCandidatura), assunto, candResposta.value.trim());
+  candAvisoTamanho.hidden = !mailto.longo;
+  candEscrever.classList.toggle("desativado", mailto.longo);
+  if (mailto.longo) {
+    candEscrever.removeAttribute("href");
+    candEscrever.setAttribute("aria-disabled", "true");
+  } else {
+    candEscrever.href = mailto.href;
+    candEscrever.removeAttribute("aria-disabled");
+  }
+}
+
+// Abre a janela para a vaga. Tudo o que vem da vaga, do currículo e do nome entra como texto puro.
+function abrirJanelaCandidatura(vaga) {
+  vagaEmPreparo = vaga;
+  candVaga.textContent = vaga.titulo + " · " + vaga.empresa;
+  const semCurriculo = curriculoVazio(perfil);
+  candSemCurriculo.hidden = !semCurriculo;
+  candComCurriculo.hidden = semCurriculo;
+  if (!semCurriculo) {
+    const porEmail = tipoCandidatura(vaga) === "email";
+    candPrompt.value = montarPrompt(vaga, perfil);   // só texto, para copiar: nunca é executado
+    candResposta.value = "";
+    candTituloResposta.textContent = porEmail ? "2. Cole aqui o e-mail que a IA escreveu" : "2. Cole aqui o texto que a IA escreveu";
+    candCopiarResposta.dataset.rotulo = porEmail ? "Copiar e-mail" : "Copiar texto";
+    candCopiarResposta.textContent = candCopiarResposta.dataset.rotulo;
+    candEscrever.hidden = !porEmail;
+    candAvisoTamanho.hidden = true;
+    candAbrirVaga.hidden = porEmail || !linkSeguro(vaga.link);
+    if (!candAbrirVaga.hidden) {
+      candAbrirVaga.href = vaga.link;
+    }
+    atualizarEscrever();
+  }
+  if (typeof janela.showModal === "function") {
+    janela.showModal();
+  } else {
+    janela.setAttribute("open", "");
+  }
+}
+
+function fecharJanelaCandidatura() {
+  vagaEmPreparo = null;
+  if (typeof janela.close === "function") {
+    janela.close();
+  } else {
+    janela.removeAttribute("open");
+  }
 }
 
 // Texto ao lado de "Meu perfil": mostra se o perfil está ativo
@@ -421,16 +608,20 @@ function aoMudarFiltroPerfil() {
   aoMudarPerfil();
 }
 
-// "Limpar meu perfil": desmarca tudo, esvazia os campos e APAGA o que estava guardado no navegador
+// "Limpar meu perfil": desmarca tudo, esvazia os campos (inclusive o currículo) e APAGA o que estava guardado no navegador
 function limparPerfil() {
   document.querySelectorAll("#perfil input[type=checkbox]").forEach(function (marcador) {
     marcador.checked = false;
   });
   caixaNome.value = "";
   caixaPalavras.value = "";
+  caixaCurriculo.value = "";  // o currículo também é apagado
+  mostrarContadorCurriculo();
   filtroPerfilPausado = false;
   perfil = novoPerfil();
-  avisoPerfil.hidden = apagarPerfil(armazenamento);
+  const apagou = apagarPerfil(armazenamento);
+  avisoPerfil.hidden = apagou;
+  mostrarMensagemPerfil(apagou ? "Perfil e currículo apagados deste navegador." : "Perfil e currículo limpos nesta página.", false);
   mostrarEstadoPerfil();
   mostrarSaudacao();
   mostrarVagas();
@@ -468,20 +659,33 @@ caixaNome.addEventListener("input", aoMudarPerfil);
 caixaPalavras.addEventListener("input", aoMudarPerfil);
 botaoLimparPerfil.addEventListener("click", limparPerfil);
 
+caixaCurriculo.addEventListener("input", aoMudarCurriculo);
+botaoExportar.addEventListener("click", exportarPerfil);
+botaoImportar.addEventListener("click", function () { arquivoPerfil.click(); });
+arquivoPerfil.addEventListener("change", function () {
+  importarPerfil(arquivoPerfil.files[0]);
+  arquivoPerfil.value = "";  // permite escolher o mesmo arquivo de novo depois
+});
+document.getElementById("cand-fechar").addEventListener("click", fecharJanelaCandidatura);
+janela.addEventListener("click", function (evento) {
+  if (evento.target === janela) {  // clique fora da caixa (no fundo escuro)
+    fecharJanelaCandidatura();
+  }
+});
+janela.addEventListener("close", function () { vagaEmPreparo = null; });
+document.getElementById("cand-ir-curriculo").addEventListener("click", function () {
+  fecharJanelaCandidatura();
+  document.getElementById("perfil").open = true;
+  caixaCurriculo.scrollIntoView({ block: "center" });
+  caixaCurriculo.focus();
+});
+candResposta.addEventListener("input", atualizarEscrever);
+ligarBotaoCopiar(document.getElementById("cand-copiar-prompt"), function () { return candPrompt.value; });
+ligarBotaoCopiar(candCopiarResposta, function () { return candResposta.value.trim(); });
 preencherOpcoes(selectArea, "area");
 preencherOpcoes(selectCidade, "cidade");
 preencherOpcoes(selectFonte, "fonte");
-const porTextoPtBr = function (lista) {
-  return lista.sort(function (a, b) { return a.localeCompare(b, "pt-BR"); });
-};
-criarOpcoesPerfil("categorias", opcoesDoGrupo(categoriasDasVagas(vagasAtivas), perfil.categorias, function (lista) {
-  return NOMES_CATEGORIAS.filter(function (nome) { return lista.includes(nome); });  // ordem do mapa
-}));
-criarOpcoesPerfil("cidades", opcoesDoGrupo(valoresUnicos("cidade"), perfil.cidades, porTextoPtBr));
-criarOpcoesPerfil("tipos", opcoesDoGrupo(valoresUnicos("tipoEmpresa"), perfil.tipos, porTextoPtBr));
-criarOpcoesModalidade();
-caixaNome.value = perfil.nome;
-caixaPalavras.value = perfil.palavras;
+montarPainelPerfil();
 mostrarSaudacao();
 avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada
 mostrarEstadoPerfil();

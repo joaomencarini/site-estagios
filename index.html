@@ -49,12 +49,29 @@
           <input id="perfil-palavras" type="text" maxlength="200" autocomplete="off" placeholder="Ex.: M&amp;A, valuation">
         </label>
 
+        <fieldset class="perfil-grupo">
+          <legend>Meu currículo</legend>
+          <p class="aviso-curriculo">Seu currículo fica só neste navegador. Nada é enviado a servidor.</p>
+          <label class="perfil-texto">Cole aqui o texto do seu currículo (até 15.000 caracteres)
+            <textarea id="perfil-curriculo" rows="8" maxlength="15000" autocomplete="off" spellcheck="false" placeholder="Cole o texto do seu currículo. Ele é usado só para montar o prompt de &quot;Preparar candidatura&quot;."></textarea>
+          </label>
+          <p id="curriculo-contador" class="curriculo-contador" aria-live="polite">0 / 15.000 caracteres</p>
+          <div class="perfil-backup">
+            <button id="botao-exportar-perfil" type="button" class="botao-limpar-perfil">Exportar perfil (arquivo)</button>
+            <button id="botao-importar-perfil" type="button" class="botao-limpar-perfil">Importar perfil (arquivo)</button>
+            <input id="arquivo-perfil" type="file" accept=".json,application/json" hidden>
+          </div>
+          <p class="perfil-dica">O arquivo exportado contém seu currículo: guarde-o com cuidado e não o publique.</p>
+          <p id="perfil-mensagem" class="perfil-mensagem" role="status" hidden></p>
+        </fieldset>
+
         <p id="aviso-perfil" class="aviso-perfil" hidden>
           Não foi possível salvar o perfil neste navegador (o armazenamento está bloqueado).
           Ele continua valendo enquanto esta página estiver aberta.
         </p>
 
         <button id="botao-limpar-perfil" type="button" class="botao-limpar-perfil">Limpar meu perfil</button>
+        <p class="perfil-dica">Apaga tudo deste navegador, inclusive o currículo. Exporte antes se quiser guardar uma cópia.</p>
       </div>
     </details>
 
@@ -107,8 +124,45 @@
   <footer class="rodape">
     Este site apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão;
     a candidatura é feita na página original.
-    <br>Sem login e sem coleta de dados: seu perfil (inclusive o nome, se você o informar) fica só neste navegador e nada é enviado a nenhum servidor.
+    <br>Sem login e sem coleta de dados: seu perfil (inclusive o nome e o currículo, se você os informar) fica só neste navegador e nada é enviado a nenhum servidor.
   </footer>
+
+  <!-- Janela "Preparar candidatura": o JavaScript preenche os textos (sempre como texto puro) -->
+  <dialog id="janela-candidatura" class="janela" aria-labelledby="cand-titulo">
+    <div class="janela-conteudo">
+      <div class="janela-topo">
+        <h2 id="cand-titulo">Preparar candidatura</h2>
+        <button id="cand-fechar" type="button" class="botao-faixa">Fechar</button>
+      </div>
+      <p id="cand-vaga" class="cand-vaga"></p>
+
+      <div id="cand-sem-curriculo" hidden>
+        <p>Para preparar a candidatura, cole o texto do seu currículo no painel <strong>Meu perfil &rarr; Meu currículo</strong>. Ele fica só neste navegador e nada é enviado a servidor.</p>
+        <button id="cand-ir-curriculo" type="button" class="botao-email">Ir para Meu currículo</button>
+      </div>
+
+      <div id="cand-com-curriculo" hidden>
+        <h3>1. Copie o prompt e cole na sua IA</h3>
+        <p class="perfil-dica">Use o ChatGPT, o Claude ou outra IA de sua preferência. O prompt já tem os dados da vaga e o seu currículo.</p>
+        <textarea id="cand-prompt" class="cand-texto" rows="7" readonly aria-label="Prompt para copiar"></textarea>
+        <button id="cand-copiar-prompt" type="button" class="botao-secundario">Copiar prompt</button>
+
+        <h3 id="cand-titulo-resposta">2. Cole aqui o e-mail que a IA escreveu</h3>
+        <textarea id="cand-resposta" class="cand-texto" rows="8" aria-labelledby="cand-titulo-resposta"></textarea>
+        <p id="cand-aviso-tamanho" class="aviso-perfil" role="status" hidden>
+          O texto é longo para abrir direto no app de e-mail (limite de cerca de 1.800 caracteres no link).
+          Use "Copiar e-mail" e cole o texto no seu app de e-mail.
+        </p>
+        <div class="email-botoes">
+          <a id="cand-escrever" class="botao-email" href="#">Escrever e-mail</a>
+          <button id="cand-copiar-resposta" type="button" class="botao-secundario">Copiar e-mail</button>
+          <a id="cand-abrir-vaga" class="botao-vaga" target="_blank" rel="noopener noreferrer" hidden>Abrir vaga e se candidatar</a>
+        </div>
+      </div>
+
+      <p class="aviso-perfil cand-aviso">Confira o texto antes de enviar. Anexe seu currículo em PDF manualmente.</p>
+    </div>
+  </dialog>
 
   <!-- Os arquivos de regras e de dados vêm primeiro: criam as listas que o app.js usa -->
   <script src="js/regras.js"></script>

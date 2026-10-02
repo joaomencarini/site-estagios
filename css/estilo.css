@@ -10,6 +10,9 @@
   --raio: 10px;
 }
 
+/* O atributo hidden sempre esconde (mesmo em elementos com display próprio) */
+[hidden] { display: none !important; }
+
 /* ===== Base ===== */
 * { box-sizing: border-box; }
 
@@ -539,4 +542,76 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 @media (min-width: 900px) {
   .filtros { grid-template-columns: 1fr 1fr 1fr auto; }
   .filtros button { grid-column: auto; justify-self: stretch; }
+}
+
+/* ===== Meu currículo, backup do perfil e janela "Preparar candidatura" ===== */
+.aviso-curriculo {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  background: #e4edf5;
+  border: 1px solid var(--azul);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--azul-escuro);
+}
+.perfil-texto textarea,
+.cand-texto {
+  width: 100%;
+  min-height: 120px;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.4;
+  background: var(--branco);
+  border: 1px solid #9aa5b1;
+  border-radius: 8px;
+  color: #1b2430;
+  resize: vertical;
+}
+.perfil-texto textarea:focus-visible,
+.cand-texto:focus-visible { outline: 3px solid var(--azul); outline-offset: 2px; }
+.cand-texto[readonly] { background: #f3f5f7; font-size: 0.9rem; }
+.curriculo-contador { margin: 6px 0 12px; font-size: 0.85rem; color: var(--cinza-texto); }
+.curriculo-contador.no-limite { color: #a61b1b; font-weight: 600; }
+.perfil-backup { display: grid; gap: 8px; }
+.perfil-mensagem {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  background: #dcf1ea;
+  border: 1px solid #8cc9b2;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #0b4a37;
+}
+.perfil-mensagem-erro { background: #fbe4e4; border-color: #e0a3a3; color: #7a1313; }
+.botao-preparar { margin-top: 0; }
+
+/* Janela (dialog) */
+.janela {
+  width: min(680px, calc(100vw - 24px));
+  max-height: calc(100vh - 24px);
+  padding: 0;
+  overflow: auto;
+  background: var(--branco);
+  border: 1px solid var(--cinza-borda);
+  border-radius: var(--raio);
+  color: #1b2430;
+}
+.janela::backdrop { background: rgba(15, 42, 67, 0.6); }
+.janela-conteudo { display: grid; gap: 12px; padding: 16px; }
+.janela-topo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.janela-topo h2 { margin: 0; font-size: 1.25rem; color: var(--azul-escuro); }
+.janela h3 { margin: 4px 0 0; font-size: 1rem; color: var(--azul-escuro); }
+.janela p { margin: 0; }
+.cand-vaga { font-weight: 600; color: var(--cinza-texto); }
+.janela .botao-secundario, .janela .botao-email { flex: 0 0 auto; }
+.janela .botao-email.desativado { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
+.janela .botao-vaga { display: inline-flex; }
+.cand-aviso { font-weight: 600; }
+@media (min-width: 640px) {
+  .perfil-backup { grid-template-columns: auto auto; justify-content: start; }
+  .perfil-backup .botao-limpar-perfil { width: auto; }
+  .janela-conteudo { padding: 20px; }
 }

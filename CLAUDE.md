@@ -6,6 +6,9 @@ Site para ajudar universitários brasileiros a encontrar estágios no mercado fi
 ## Contexto do autor
 Iniciante em programação. Regra de ouro: **simplicidade acima de tudo**. Nada de frameworks, build steps ou dependências sem necessidade clara. Explicar o "porquê" de cada escolha em linguagem simples. Idioma do site e dos textos: português do Brasil.
 
+## REGRA DE SEGURANÇA (dados pessoais)
+**O repositório e o site são públicos.** NUNCA grave currículo ou dado pessoal de usuário em nenhum arquivo do repositório (`data/`, `js/`, exemplos de teste com dados reais, etc.). Em testes, use **só currículo fictício** (os testes usam "Pessoa Fictícia"). O `.gitignore` bloqueia por segurança arquivos como `perfil-estagios*.json`, `curriculo*` e `cv-*.pdf`, mas a regra vale mesmo assim: antes de qualquer commit, confira que nenhum arquivo traz dado pessoal real.
+
 ## Stack (tudo gratuito)
 - **HTML + CSS + JavaScript puro** — sem framework, sem build; abre direto no navegador.
 - **Vagas em `data/vagas.js`** — dados separados do código, editáveis à mão, sem banco de dados. É `.js` (lista `vagas`) para o site funcionar abrindo o `index.html` direto, sem servidor.
@@ -20,6 +23,7 @@ Iniciante em programação. Regra de ouro: **simplicidade acima de tudo**. Nada 
 ```
 site-estagios/
 ├── CLAUDE.md
+├── .gitignore          # impede subir perfil/currículo exportado por engano
 ├── README.md
 ├── .nojekyll           # faz o GitHub Pages publicar os arquivos como estão
 ├── .github/workflows/
@@ -34,7 +38,7 @@ site-estagios/
 ├── css/
 │   └── estilo.css
 ├── js/
-│   ├── regras.js       # regras de expiração, link inativo, e-mail, pontuação/ordenação por perfil (usadas pelo site, pelos scripts e pelos testes)
+│   ├── regras.js       # regras de expiração, link inativo, e-mail, pontuação/ordenação por perfil, currículo, prompt, exportar/importar (usadas pelo site, pelos scripts e pelos testes)
 │   ├── app.js          # junta as vagas, esconde as vencidas/inativas, aplica filtros, desenha os cards
 │   └── adicionar.js    # lógica do formulário adicionar.html
 ├── testes/
@@ -110,6 +114,20 @@ O painel **Meu perfil** (no alto de `index.html`) deixa o usuário dizer o que p
   - Empates totais mantêm a ordem original.
 - **Testes:** `node --test` (na pasta do projeto, Node 18 ou mais novo) roda `testes/regras.test.js`, que cobre o mapeamento de categorias (incluindo "Diversas" e "Outras"), o filtro por grupo (e/ou, "Diversas", modalidade sem dado), o estado vazio, a combinação com os filtros da página, pontuação, ordenação, selo, nome (com `<script>`, aspas, espaços e nome longo), `localStorage` indisponível/bloqueado/com dados quebrados ou antigos e as regras de expiração, e-mail e link inativo. Ao mudar pesos, categorias ou regras, atualize os testes e esta seção.
 
+## Meu currículo e "Preparar candidatura" (Etapa 9, sem servidor)
+Tudo roda no navegador. **Nenhum texto é enviado a servidor** (o site não usa `fetch`, XHR, beacon nem WebSocket; o rodapé diz isso e precisa continuar verdadeiro). Se mexer aqui, mantenha assim.
+
+- **Meu currículo:** campo de texto no painel "Meu perfil" (até **15.000 caracteres**, com contador). Fica em `perfil.curriculo` no `localStorage` (chave `estagiosPerfil`), junto do resto do perfil. É sempre texto puro; `limparCurriculo` troca CRLF por LF, tira caracteres de controle e corta em 15.000. **Não filtra nem pontua vagas** e não conta como "perfil preenchido".
+- **Exportar / importar:** botões "Exportar perfil (arquivo)" (baixa `perfil-estagios.json`) e "Importar perfil (arquivo)". Formato: `{ "formato": "estagios-perfil", "versao": 1, "perfil": { ... } }`. A importação (`validarImportacao`) recusa, com mensagem em português e **sem alterar nada**: arquivo maior que 100.000 caracteres, JSON inválido, formato ou versão diferentes, perfil sem nenhum campo conhecido e currículo acima de 15.000. Campos desconhecidos são descartados. Importar substitui o perfil atual. O arquivo exportado tem dado pessoal: **nunca o coloque no repositório** (por isso o `.gitignore`).
+- **Limpar meu perfil** apaga tudo, inclusive o currículo, e remove a chave do `localStorage`.
+- **Botão "Preparar candidatura"** em todo cartão que tenha e-mail ou link (`tipoCandidatura(vaga)` devolve "email", "formulario" ou ""). Abre uma janela (`<dialog>`):
+  - **Sem currículo:** pede para preencher "Meu currículo" (botão leva ao painel).
+  - **Com currículo:** mostra um **prompt** (`montarPrompt`) para o aluno **copiar e colar** na IA que preferir (ChatGPT, Claude...). O site **não executa o prompt nem chama IA**. O aluno cola a resposta no campo da janela; com e-mail, "Escrever e-mail" abre o programa de e-mail com destinatários, assunto e esse texto no corpo, e há "Copiar texto". Com link, aparece "Abrir vaga". Aviso fixo: "Confira o texto antes de enviar. Anexe seu currículo em PDF manualmente."
+  - **Prompt por e-mail:** até 150 palavras; no idioma do assunto exigido (ou português do Brasil se não houver assunto); "Use SOMENTE informações que estão no currículo abaixo. Não invente experiência, notas, empresas, datas ou números."; sem placeholders; termina com o nome do candidato. **Prompt por formulário (só link):** "resumo do meu perfil" (até 80 palavras) + exatamente 3 pontos de ligação com a vaga, até 150 palavras no total.
+  - **Proteção contra "injeção de prompt":** os dados entram entre marcadores (`<<<VAGA>>>…<<<FIM_VAGA>>>`, `<<<CANDIDATO>>>`, `<<<CURRICULO>>>`); o prompt manda tratar o que está dentro como dado, nunca como instrução; `escaparMarcadores` impede que o texto imite um marcador (`<<<` vira `< < <`); campos curtos viram linha única. Tudo é inserido como texto puro (`textContent`/`value`), nunca `innerHTML`.
+  - **Limite do `mailto:`:** programas de e-mail cortam endereços muito longos. Acima de `LIMITE_MAILTO` (**1800** caracteres, já codificado), o botão "Escrever e-mail" é desativado, aparece um aviso e continuam valendo "Copiar e-mail" e "Copiar texto".
+- **Testes:** os de currículo, prompt, mailto com corpo e exportar/importar estão em `testes/regras.test.js` (hoje 84 testes, só com currículo fictício). Ao mudar o prompt ou o formato de exportação, atualize os testes e esta seção (suba a `versao` se o formato mudar de forma incompatível).
+
 ## Regra do projeto sobre conteúdo das vagas
 **Nunca copiar a descrição completa das vagas.** Guardar só os dados básicos acima, o link da vaga original e, quando a vaga pedir envio de CV por e-mail, o e-mail e o assunto indicados por ela (e só esses). A candidatura sempre acontece na página original, e a fonte é sempre indicada no cartão.
 
@@ -180,6 +198,7 @@ Confere cada vaga **com link**, manual ou automática, que ainda não venceu (va
 6c. **Filtro de verdade a partir do perfil, com categorias de área** — pronto quando: o perfil escolhe categorias (mapa área → categoria em `js/regras.js`, com "Diversas" compatível com todas e selo "Várias áreas"); cada grupo marcado filtra a lista (e entre grupos, ou dentro do grupo; sem modalidade informada continua aparecendo); a faixa "Filtrando por" tem "Mostrar todas as vagas"/"Voltar a filtrar"; o estado vazio tem botão; combina com os filtros da página; palavras-chave só pontuam.
 7. **Candidatura por e-mail** — pronto quando: vagas que pedem CV por e-mail mostram o e-mail com "Copiar e-mail" e "Escrever e-mail" (e assunto, se houver); o verificador de links ignora e-mails; `adicionar.html` gera os dois campos. (Extensão: `emailCandidatura` aceita também uma lista de e-mails, cada um com "Copiar e-mail" e um "Escrever e-mail" com todos os destinatários.)
 8. **Evolução (só se necessário)** — favoritos (localStorage), formulário de envio de vaga, backend/banco (ex.: Supabase) apenas se o arquivo de vagas deixar de bastar.
+9. **Meu currículo no navegador + "Preparar candidatura"** — pronto quando: o currículo (até 15.000 caracteres) fica só no `localStorage`; exportar/importar perfil funciona e recusa arquivos inválidos; "Preparar candidatura" gera o prompt (e-mail ou formulário) e abre o e-mail com o texto colado; "Limpar meu perfil" apaga o currículo; nada é enviado a servidor; testes só com currículo fictício.
 
 ## Convenções
 - Uma etapa por vez; não antecipar funcionalidades das etapas seguintes.
