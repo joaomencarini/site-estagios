@@ -140,11 +140,6 @@ function criarBotaoCopiar(rotulo, texto) {
   return botao;
 }
 
-// Link "mailto:" com o assunto codificado (acentos, espaços, "|" e "&" viram códigos %XX)
-function montarMailto(email, assunto) {
-  return "mailto:" + email + (assunto ? "?subject=" + encodeURIComponent(assunto) : "");
-}
-
 // Escreve o e-mail no elemento deixando a linha quebrar só depois de "@" e de pontos (texto puro, sem HTML)
 function escreverEmail(elemento, email) {
   (email.match(/[^@.]+[@.]?|[@.]/g) || []).forEach(function (parte, posicao) {
@@ -155,32 +150,59 @@ function escreverEmail(elemento, email) {
   });
 }
 
-// Bloco "Enviar CV para: ..." com os botões de copiar e de escrever o e-mail
-function criarBlocoEmail(vaga) {
+// Bloco "Enviar CV para: ..." com os e-mails (cada um com "Copiar e-mail") e o botão "Escrever e-mail",
+// que abre o programa de e-mail com TODOS os destinatários e o assunto (se houver).
+function criarBlocoEmail(vaga, emails) {
   const bloco = criar("div", "email-candidatura");
+  const assunto = typeof vaga.assuntoEmail === "string" ? vaga.assuntoEmail.trim() : "";
 
-  const linhaEmail = criar("p", "email-linha", "Enviar CV para: ");
-  const endereco = criar("strong", "email-endereco");
-  escreverEmail(endereco, vaga.emailCandidatura);
-  linhaEmail.appendChild(endereco);
-  bloco.appendChild(linhaEmail);
+  if (emails.length === 1) {
+    // Um só e-mail: o endereço fica na própria linha
+    const linhaEmail = criar("p", "email-linha", "Enviar CV para: ");
+    const endereco = criar("strong", "email-endereco");
+    escreverEmail(endereco, emails[0]);
+    linhaEmail.appendChild(endereco);
+    bloco.appendChild(linhaEmail);
+    const botoesEmail = criar("div", "email-botoes");
+    botoesEmail.appendChild(criarBotaoCopiar("Copiar e-mail", emails[0]));
+    botoesEmail.appendChild(criarLinkEscrever(emails, assunto));
+    bloco.appendChild(botoesEmail);
+  } else {
+    // Vários e-mails: uma linha para cada um, com o seu "Copiar e-mail"
+    bloco.appendChild(criar("p", "email-linha", "Enviar CV para:"));
+    const lista = criar("ul", "email-lista");
+    emails.forEach(function (email) {
+      const item = criar("li", "email-item");
+      const endereco = criar("strong", "email-endereco");
+      escreverEmail(endereco, email);
+      item.appendChild(endereco);
+      const copiar = criarBotaoCopiar("Copiar e-mail", email);
+      copiar.setAttribute("aria-label", "Copiar e-mail " + email);
+      item.appendChild(copiar);
+      lista.appendChild(item);
+    });
+    bloco.appendChild(lista);
+    const botoesEmail = criar("div", "email-botoes");
+    botoesEmail.appendChild(criarLinkEscrever(emails, assunto));
+    bloco.appendChild(botoesEmail);
+  }
 
-  const botoesEmail = criar("div", "email-botoes");
-  botoesEmail.appendChild(criarBotaoCopiar("Copiar e-mail", vaga.emailCandidatura));
-  const escrever = criar("a", "botao-email", "Escrever e-mail");
-  escrever.href = montarMailto(vaga.emailCandidatura, vaga.assuntoEmail);
-  botoesEmail.appendChild(escrever);
-  bloco.appendChild(botoesEmail);
-
-  if (vaga.assuntoEmail) {
+  if (assunto !== "") {
     const linhaAssunto = criar("p", "email-linha", "Assunto: ");
-    linhaAssunto.appendChild(criar("span", "email-assunto", vaga.assuntoEmail));
+    linhaAssunto.appendChild(criar("span", "email-assunto", assunto));
     bloco.appendChild(linhaAssunto);
     const botoesAssunto = criar("div", "email-botoes");
-    botoesAssunto.appendChild(criarBotaoCopiar("Copiar assunto", vaga.assuntoEmail));
+    botoesAssunto.appendChild(criarBotaoCopiar("Copiar assunto", assunto));
     bloco.appendChild(botoesAssunto);
   }
   return bloco;
+}
+
+// Link "Escrever e-mail": abre o mailto com todos os destinatários válidos (e o assunto, se houver)
+function criarLinkEscrever(emails, assunto) {
+  const escrever = criar("a", "botao-email", "Escrever e-mail");
+  escrever.href = montarMailto(emails, assunto);
+  return escrever;
 }
 
 // Monta o cartão de uma vaga. "combina" = true mostra o selo "Combina com você";
@@ -240,8 +262,10 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
     botao.rel = "noopener noreferrer";
     acoes.appendChild(botao);
   }
-  if (emailValido(vaga.emailCandidatura)) {
-    acoes.appendChild(criarBlocoEmail(vaga));
+  // emailCandidatura pode ser um e-mail ou uma lista; só os válidos entram (se nenhum for válido, sem bloco)
+  const emails = emailsValidos(vaga.emailCandidatura);
+  if (emails.length > 0) {
+    acoes.appendChild(criarBlocoEmail(vaga, emails));
   }
   if (acoes.children.length > 0) {
     cartao.appendChild(acoes);

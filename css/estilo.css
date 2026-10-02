@@ -392,6 +392,10 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
 .email-linha { margin: 0; font-size: 0.95rem; color: #2b3643; }
 .email-endereco { color: var(--azul-escuro); }
 .email-botoes { display: flex; flex-wrap: wrap; gap: 8px; }
+.email-lista { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.email-item { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; }
+.email-item .email-endereco { flex: 1 1 200px; min-width: 0; }
+.email-item .botao-secundario { flex: 1 1 140px; }
 .botao-secundario,
 .botao-email {
   flex: 1 1 auto;
@@ -520,6 +524,7 @@ main { max-width: 900px; margin: 0 auto; padding: 16px; }
   .acoes { justify-items: start; margin-top: 16px; }
   .botao-vaga { display: inline-flex; padding: 10px 28px; }
   .email-candidatura { max-width: 520px; }
+  .email-item .botao-secundario { flex: 0 0 auto; }
   .botao-secundario,
   .botao-email { flex: 0 1 auto; padding: 10px 22px; }
 

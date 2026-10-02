@@ -53,6 +53,32 @@ function emailValido(texto) {
   return typeof texto === "string" && /^[^\s@<>"',;?&#()/\\]+@[^\s@<>"',;?&#()/\\]+\.[^\s@<>"',;?&#()/\\]+$/.test(texto);
 }
 
+// E-mails de candidatura de uma vaga. O campo "emailCandidatura" aceita UM texto ou uma LISTA de textos.
+// Cada e-mail é validado com a mesma regra segura (emailValido); os inválidos, repetidos ou que não sejam
+// texto são ignorados, sem erro. Devolve só os válidos, na ordem em que vieram.
+function emailsValidos(valor) {
+  const itens = Array.isArray(valor) ? valor : [valor];
+  const lista = [];
+  itens.forEach(function (item) {
+    if (typeof item !== "string") {
+      return;
+    }
+    const email = item.trim();
+    const repetido = lista.some(function (existente) { return existente.toLowerCase() === email.toLowerCase(); });
+    if (emailValido(email) && !repetido) {
+      lista.push(email);
+    }
+  });
+  return lista;
+}
+
+// Link "mailto:" com TODOS os destinatários separados por vírgula e, se houver, o assunto codificado
+// (acentos, espaços, "|" e "&" viram códigos %XX). O "%" de um endereço também é protegido.
+function montarMailto(emails, assunto) {
+  const destinatarios = emails.map(function (email) { return email.replace(/%/g, "%25"); }).join(",");
+  return "mailto:" + destinatarios + (assunto ? "?subject=" + encodeURIComponent(assunto) : "");
+}
+
 // ================= Personalização por interesses ("Meu perfil") =================
 // Tudo roda no navegador: nada é enviado a servidor algum e nada pessoal é coletado.
 
@@ -398,7 +424,7 @@ function salvarPerfil(armazenamento, perfil) {
 
 // No Node (scripts) exporta as funções; no navegador elas já ficam disponíveis direto
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo, emailValido,
+  module.exports = { DIAS_SEM_PRAZO, FALHAS_PARA_INATIVAR, hojeIso, diasEntre, vagaVencida, linkInativo, emailValido, emailsValidos, montarMailto,
     PESOS, LIMITE_COMBINA, CHAVE_PERFIL, TAMANHO_MAXIMO_NOME, MODALIDADES, ROTULOS_MODALIDADE, CATEGORIA_OUTRAS,
     CATEGORIAS_AREA, NOMES_CATEGORIAS, normalizarTexto, ehAreaVaria, classificarArea, categoriaOficial,
     categoriasDasVagas, modalidadePadrao, modalidadeDaVaga, limparNome, novoPerfil, sanitizarPerfil, palavrasChave,

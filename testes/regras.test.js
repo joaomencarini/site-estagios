@@ -437,6 +437,63 @@ test("perfil guardado não vira código: texto estranho é só texto", () => {
   assert.strictEqual(R.lerPerfil(a).palavras, "<img src=x onerror=alert(1)>");
 });
 
+// ---------------- e-mails de candidatura (um ou vários) ----------------
+const A = "lauren.wang@santander.com.br", B = "jose.fachim@santander.com.br", C = "eduardo.vescovi@santander.com.br", D = "joao.skowronski@santander.com.br";
+
+test("emailCandidatura como texto: um e-mail válido vira lista de um", () => {
+  assert.deepStrictEqual(R.emailsValidos(A), [A]);
+  assert.deepStrictEqual(R.emailsValidos("  " + A + "  "), [A]);          // espaços nas pontas são tirados
+});
+
+test("emailCandidatura como lista: todos os válidos, na ordem", () => {
+  assert.deepStrictEqual(R.emailsValidos([A, B, C, D]), [A, B, C, D]);
+});
+
+test("e-mail inválido no meio da lista é ignorado, os outros ficam", () => {
+  assert.deepStrictEqual(R.emailsValidos([A, "isso nao e email", B, "x@y", "a&b@c.com", C]), [A, B, C]);
+  assert.deepStrictEqual(R.emailsValidos([A, "a@b.c?bcc=x@y.z", D]), [A, D]);            // tentativa de injetar destinatário
+  assert.deepStrictEqual(R.emailsValidos([A, "<img src=x onerror=alert(1)>@x.com", B]), [A, B]);
+});
+
+test("texto único com vários e-mails juntos (separados por ; ou espaço) continua inválido", () => {
+  assert.deepStrictEqual(R.emailsValidos(A + "; " + B), []);
+  assert.deepStrictEqual(R.emailsValidos(A + ", " + B), []);
+});
+
+test("itens que não são texto, repetidos, listas vazias e valores estranhos não quebram nada", () => {
+  assert.deepStrictEqual(R.emailsValidos([A, null, undefined, 5, {}, [], true, B]), [A, B]);
+  assert.deepStrictEqual(R.emailsValidos([A, A.toUpperCase(), B, A]), [A, B]);          // repetido (mesmo com outra caixa) entra uma vez só
+  for (const nada of [undefined, null, "", "   ", [], [""], 5, {}, true, [null, "x"]]) assert.deepStrictEqual(R.emailsValidos(nada), [], String(nada));
+});
+
+test("mailto com um destinatário: sem assunto e com assunto", () => {
+  assert.strictEqual(R.montarMailto([A], ""), "mailto:" + A);
+  assert.strictEqual(R.montarMailto([A], undefined), "mailto:" + A);
+  assert.strictEqual(R.montarMailto([A], "Estágio M&A"), "mailto:" + A + "?subject=Est%C3%A1gio%20M%26A");
+});
+
+test("mailto com vários destinatários separados por vírgula e assunto codificado", () => {
+  assert.strictEqual(R.montarMailto([A, B, C, D], ""), "mailto:" + [A, B, C, D].join(","));
+  const href = R.montarMailto([A, B, C, D], "Investment Banking Internship - Full Name (University)");
+  assert.strictEqual(href, "mailto:" + [A, B, C, D].join(",") + "?subject=Investment%20Banking%20Internship%20-%20Full%20Name%20(University)");
+  const [destinos, consulta] = href.split("?subject=");
+  assert.deepStrictEqual(destinos.replace("mailto:", "").split(","), [A, B, C, D]);
+  assert.strictEqual(decodeURIComponent(consulta), "Investment Banking Internship - Full Name (University)");
+});
+
+test("mailto: assunto com acentos, '|' e '&' fica codificado e volta idêntico", () => {
+  const assunto = "Estagiário(a) de M&A | (Nome Completo)";
+  const href = R.montarMailto([A, B], assunto);
+  const consulta = href.split("?subject=")[1];
+  assert.ok(/%C3%A1/.test(consulta) && /%7C/.test(consulta) && /%26/.test(consulta) && !/[&| ]/.test(consulta));
+  assert.strictEqual(decodeURIComponent(consulta), assunto);
+});
+
+test("mailto só leva os válidos (a lista passa por emailsValidos) e protege o '%' do endereço", () => {
+  assert.strictEqual(R.montarMailto(R.emailsValidos([A, "ruim", B]), ""), "mailto:" + A + "," + B);
+  assert.strictEqual(R.montarMailto(["a%2Cb@x.com"], ""), "mailto:a%252Cb@x.com");   // "%2C" não vira uma vírgula (outro destinatário)
+});
+
 // ---------------- regras que já existiam (rede de segurança) ----------------
 test("expiração: com prazo, sem prazo manual (45 dias) e automática", () => {
   assert.strictEqual(R.vagaVencida({ prazoInscricao: "2026-10-01" }, "2026-10-01"), false);

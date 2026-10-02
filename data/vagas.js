@@ -13,8 +13,10 @@
 //   link (opcional): endereço da vaga original. Sem link, o cartão fica sem o botão.
 //   modalidade (opcional): "presencial", "hibrido" ou "remoto". Só preencha se a própria vaga informar.
 //     NUNCA presuma nem invente. Sem esse campo, a vaga aparece normalmente (sem selo de modalidade).
-//   emailCandidatura (opcional): e-mail para enviar o CV. O cartão mostra "Enviar CV para: ..." com os
-//     botões "Copiar e-mail" e "Escrever e-mail" (abre o programa de e-mail).
+//   emailCandidatura (opcional): e-mail para enviar o CV. Pode ser UM texto ("a@empresa.com") ou uma LISTA
+//     (["a@empresa.com", "b@empresa.com"]). Cada e-mail é validado; os inválidos são ignorados. O cartão mostra
+//     "Enviar CV para: ..." com um "Copiar e-mail" por endereço e o botão "Escrever e-mail", que abre o programa
+//     de e-mail com TODOS os destinatários válidos.
 //   assuntoEmail (opcional, só com emailCandidatura): assunto sugerido; o cartão mostra "Assunto: ..."
 //     com o botão "Copiar assunto" e já usa o assunto ao escrever o e-mail.
 //   Se houver link e e-mail, o cartão mostra os dois. Sem nenhum dos dois, fica sem botão.
@@ -279,7 +281,12 @@ const vagas = [
     cidade: "São Paulo",
     tipoEmpresa: "Banco",
     fonte: "Polifinance",
-    emailCandidatura: "lauren.wang@santander.com.br",
+    emailCandidatura: [
+      "lauren.wang@santander.com.br",
+      "jose.fachim@santander.com.br",
+      "eduardo.vescovi@santander.com.br",
+      "joao.skowronski@santander.com.br"
+    ],
     assuntoEmail: "Investment Banking Internship - Full Name (University)",
     dataPublicacao: "2026-10-01",
     prazoInscricao: "2026-10-25"

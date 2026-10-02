@@ -50,10 +50,16 @@ formulario.addEventListener("submit", function (evento) {
     erro.textContent = "O link precisa começar com http:// ou https://";
     return;
   }
-  if (vaga.emailCandidatura !== "" && !emailValido(vaga.emailCandidatura)) {
-    erro.textContent = "O e-mail parece inválido. Use o formato nome@empresa.com, sem espaços.";
+  // Vários e-mails: separados por vírgula, ponto e vírgula ou espaço. Cada um é validado.
+  const digitados = vaga.emailCandidatura.split(/[,;\s]+/).filter(function (item) { return item !== ""; });
+  const invalidos = digitados.filter(function (item) { return !emailValido(item); });
+  if (invalidos.length > 0) {
+    erro.textContent = "E-mail inválido: " + invalidos.slice(0, 3).join(", ") + ". Use o formato nome@empresa.com, sem espaços.";
     return;
   }
+  // Um e-mail vira texto; vários viram uma lista (repetidos são descartados)
+  const emails = emailsValidos(digitados);
+  vaga.emailCandidatura = emails.length === 0 ? "" : (emails.length === 1 ? emails[0] : emails);
   if (vaga.assuntoEmail !== "" && vaga.emailCandidatura === "") {
     erro.textContent = "O assunto só faz sentido junto com o e-mail. Preencha o e-mail ou apague o assunto.";
     return;
@@ -66,7 +72,7 @@ formulario.addEventListener("submit", function (evento) {
   // JSON.stringify coloca aspas e protege caracteres especiais, evitando erro de sintaxe
   const linhas = [];
   Object.keys(vaga).forEach(function (campo) {
-    if (vaga[campo] !== "") {
+    if (vaga[campo] !== "") {  // (uma lista de e-mails também é escrita por JSON.stringify: ["a@x.com","b@x.com"])
       linhas.push("    " + campo + ": " + JSON.stringify(vaga[campo]));
     }
   });
