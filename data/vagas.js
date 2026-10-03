@@ -359,4 +359,14 @@ const vagas = [
     link: "https://www.linkedin.com/jobs/view/4471782487",
     dataPublicacao: "2026-09-30"
   },
+  {
+    titulo: "Estágio em Suporte à Diretoria e Operacional",
+    empresa: "BTG Pactual",
+    area: "Suporte à Diretoria e Operacional",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "LinkedIn",
+    link: "https://www.linkedin.com/jobs/view/4466419671",
+    dataPublicacao: "2026-10-03"
+  },
 ];
