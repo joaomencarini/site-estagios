@@ -95,11 +95,11 @@ As áreas das vagas são muito variadas. Em `js/regras.js` (`CATEGORIAS_AREA`) c
 | Categoria | Termos (a área contém) |
 |---|---|
 | Investimentos e Gestão | asset management, investimentos, fund management, special situations, venture capital, private equity, real estate, infraestrutura |
-| Banco de Investimento e M&A | m&a, investment banking, dcm, project finance, capital solutions |
+| Banco de Investimento e M&A | m&a, investment banking, dcm, project finance, capital solutions, securitização, renda fixa |
 | Risco e Crédito | risco, crédito, controle e risco, cobrança |
 | Operações e Backoffice | operações, operations, backoffice, middle office, mesa de operações |
 | Research | equity research, equities, research |
-| Comercial e Wealth | comercial, wealth, multi-family office |
+| Comercial e Wealth | comercial, wealth, multi-family office, multi family office |
 | Outras | (tudo o que não casou acima) |
 
 (O termo "research" sozinho foi acrescentado à categoria Research para a área "Research" não cair em "Outras".)

@@ -1092,3 +1092,13 @@ test("visual: sem fontes nem recursos externos (CSS e HTML só usam arquivos do 
   assert.ok(css.includes("prefers-color-scheme: dark"));
   assert.ok(css.includes("prefers-reduced-motion: reduce"));
 });
+
+test("categorias: multi family office, securitização e renda fixa", () => {
+  const cat = (area) => R.classificarArea(area).categoria;
+  assert.strictEqual(cat("Multi Family Office"), "Comercial e Wealth");
+  assert.strictEqual(cat("Multi-Family Office"), "Comercial e Wealth");
+  assert.strictEqual(cat("Securitização & Renda Fixa"), BIM);
+  assert.strictEqual(cat("SECURITIZACAO"), BIM);
+  assert.strictEqual(cat("Renda Fixa"), BIM);
+  assert.strictEqual(cat("Credit Research"), "Research");
+});

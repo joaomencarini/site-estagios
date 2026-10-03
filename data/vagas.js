@@ -302,4 +302,41 @@ const vagas = [
     assuntoEmail: "(NOME COMPLETO) - Vaga Estagiário Fund Mgmt BlueOak",
     dataPublicacao: "2026-10-01"
   },
+  {
+    titulo: "Estágio em Credit Research",
+    empresa: "XP Inc.",
+    area: "Credit Research",
+    cidade: "São Paulo",
+    tipoEmpresa: "Corretora",
+    fonte: "Polifinance",
+    emailCandidatura: "lucas.macchi@xpi.com.br",
+    assuntoEmail: "Estágio Credit Research",
+    dataPublicacao: "2026-10-02"
+  },
+  {
+    titulo: "Estágio em Securitização & Renda Fixa",
+    empresa: "VERT Capital",
+    area: "Securitização & Renda Fixa",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    link: "https://vert-capital.gupy.io/jobs/11548820",
+    dataPublicacao: "2026-10-02",
+    prazoInscricao: "2026-10-07"
+  },
+  {
+    titulo: "Estágio em Multi Family Office",
+    empresa: "Bradesco",
+    area: "Multi Family Office",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: [
+      "gustavo.castro@bradesco.com.br",
+      "pedro.p.rodrigues@bradesco.com.br"
+    ],
+    assuntoEmail: "Estágio Consolidação - (Nome do Candidato)",
+    dataPublicacao: "2026-10-02",
+    prazoInscricao: "2026-10-15"
+  },
 ];
