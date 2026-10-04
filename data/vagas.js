@@ -340,26 +340,6 @@ const vagas = [
     prazoInscricao: "2026-10-15"
   },
   {
-    titulo: "Global Wealth Management - Business Risk Intern",
-    empresa: "UBS",
-    area: "Risco / Wealth Management",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "LinkedIn",
-    link: "https://www.linkedin.com/jobs/view/4473392575",
-    dataPublicacao: "2026-10-03"
-  },
-  {
-    titulo: "Estagiário de Crédito",
-    empresa: "Grupo Yamaha Brasil",
-    area: "Crédito",
-    cidade: "São Paulo",
-    tipoEmpresa: "Outro",
-    fonte: "LinkedIn",
-    link: "https://www.linkedin.com/jobs/view/4471782487",
-    dataPublicacao: "2026-09-30"
-  },
-  {
     titulo: "Estágio em Suporte à Diretoria e Operacional",
     empresa: "BTG Pactual",
     area: "Suporte à Diretoria e Operacional",
