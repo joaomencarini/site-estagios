@@ -18,6 +18,9 @@ const candCopiarResposta = document.getElementById("cand-copiar-resposta");
 const candBaixar = document.getElementById("cand-baixar");
 const candCompartilhar = document.getElementById("cand-compartilhar");
 const candMensagem = document.getElementById("cand-mensagem");
+const candConfirma = document.getElementById("cand-confirma");
+const candConfirmaTexto = document.getElementById("cand-confirma-texto");
+const candConfirmaBotoes = document.getElementById("cand-confirma-botoes");
 const candResumo = document.getElementById("cand-resumo");
 const rePrompt = document.getElementById("re-prompt");
 const reResposta = document.getElementById("re-resposta");
@@ -59,6 +62,7 @@ function abrirJanelaCandidatura(vaga) {
   reResposta.value = "";
   limparResultadoReescrita();
   candMensagem.hidden = true;
+  candConfirma.hidden = true;
   document.querySelector('input[name="modo-curriculo"][value="como-esta"]').checked = true;
   mostrarPasso(1);
   if (typeof janela.showModal === "function") {
@@ -447,6 +451,29 @@ function compartilharArquivoGuardado() {
   });
 }
 
+// ===== Confirmação inteligente: "Você enviou a candidatura?" =====
+// Aparece depois de Escrever e-mail, Ver vaga, Compartilhar com anexo ou Baixar PDF. Nunca marca sozinho.
+
+function perguntarSeEnviou() {
+  if (vagaEmPreparo === null || candidaturaDaVaga(perfil.candidaturas, vagaEmPreparo) !== null) {
+    return;   // já está marcada: não pergunta
+  }
+  candConfirmaTexto.textContent = "Você enviou a candidatura? Marcar como candidatado";
+  candConfirmaBotoes.hidden = false;
+  candConfirma.hidden = false;
+}
+
+function marcarPelaConfirmacao() {
+  if (vagaEmPreparo === null) {
+    return;
+  }
+  if (marcarCandidatura(vagaEmPreparo, true) || candidaturaDaVaga(perfil.candidaturas, vagaEmPreparo) !== null) {
+    const item = candidaturaDaVaga(perfil.candidaturas, vagaEmPreparo);
+    candConfirmaTexto.textContent = "✓ Marcado como candidatado em " + diaMes(item.data) + "." + (armazenamento === null ? " (Vale só nesta visita: o navegador não deixou salvar.)" : "");
+    candConfirmaBotoes.hidden = true;
+  }
+}
+
 // ===== Ligações (eventos) =====
 
 function iniciarCandidatura() {
@@ -482,5 +509,11 @@ function iniciarCandidatura() {
   ligarBotaoCopiar(document.getElementById("cand-copiar-resumo"), function () { return candResumo.value; });
   candResposta.addEventListener("input", atualizarEscrever);
   candBaixar.addEventListener("click", baixarArquivoGuardado);
+  candEscrever.addEventListener("click", function () { if (candEscrever.hasAttribute("href")) { perguntarSeEnviou(); } });
+  document.getElementById("cand-abrir-vaga").addEventListener("click", perguntarSeEnviou);
+  candCompartilhar.addEventListener("click", perguntarSeEnviou);
+  document.getElementById("re-baixar-pdf").addEventListener("click", function () { if (rePagina.textContent.trim() !== "") { perguntarSeEnviou(); } });
+  document.getElementById("cand-confirma-sim").addEventListener("click", marcarPelaConfirmacao);
+  document.getElementById("cand-confirma-nao").addEventListener("click", function () { candConfirma.hidden = true; });
   candCompartilhar.addEventListener("click", compartilharArquivoGuardado);
 }

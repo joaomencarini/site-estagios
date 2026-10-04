@@ -134,7 +134,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .botao-pequeno { min-height: var(--altura-toque); padding: var(--e2) var(--e3); font-size: 0.9375rem; }
 .botao[aria-disabled="true"], .botao:disabled { opacity: 0.5; cursor: not-allowed; pointer-events: none; }
 .botao-link {
-  min-height: var(--altura-toque); padding: 0 var(--e2); background: none; border: 0; border-radius: var(--r-p);
+  white-space: nowrap; overflow-wrap: normal; min-height: var(--altura-toque); padding: 0 var(--e2); background: none; border: 0; border-radius: var(--r-p);
   color: var(--destaque); font-weight: 600; text-decoration: underline; cursor: pointer;
 }
 .botao-icone {
@@ -260,7 +260,7 @@ dialog::backdrop { background: var(--fundo-janela); }
 
 .abas { display: flex; gap: var(--e1); padding: 0 var(--e4); border-bottom: 1px solid var(--borda); }
 .aba {
-  flex: 1 1 0; min-height: var(--altura-toque); padding: 0 var(--e3); background: none; border: 0; border-bottom: 3px solid transparent;
+  flex: 1 1 0; min-width: 0; min-height: var(--altura-toque); padding: 0 var(--e1); font-size: 0.875rem; overflow-wrap: normal; background: none; border: 0; border-bottom: 3px solid transparent;
   color: var(--texto-2); font-weight: 600; cursor: pointer;
 }
 .aba[aria-selected="true"] { color: var(--destaque); border-bottom-color: var(--destaque); }
@@ -327,6 +327,51 @@ dialog::backdrop { background: var(--fundo-janela); }
 .re-lacunas h4 { margin-top: 0; }
 .re-lacunas .dica { color: inherit; }
 .re-lacunas ul { margin: var(--e2) 0 0; padding-left: 20px; }
+
+/* ===== "Já me candidatei" (Etapa 10b) ===== */
+.mostrar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--e2) var(--e3); }
+.segmentos { display: flex; flex-wrap: wrap; gap: var(--e1); padding: var(--e1); background: var(--superficie-2); border-radius: var(--r-p); }
+.segmento {
+  white-space: nowrap; overflow-wrap: normal;
+  min-height: var(--altura-toque); padding: 0 var(--e3); background: transparent; border: 0; border-radius: 6px;
+  color: var(--texto); font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+}
+.segmento[aria-pressed="true"] { background: var(--superficie); color: var(--destaque-forte); box-shadow: var(--sombra-1); }
+.check-candidatura {
+  overflow-wrap: normal;
+  display: inline-flex; align-items: center; gap: var(--e2); align-self: flex-start; min-height: var(--altura-toque); margin-top: var(--e1); padding: 0 var(--e3);
+  background: transparent; border: 1px solid var(--borda); border-radius: 999px; color: var(--texto); font-weight: 600; font-size: 0.9375rem; cursor: pointer;
+}
+.check-candidatura::before {
+  content: ""; width: 20px; height: 20px; flex: 0 0 auto; border: 2px solid var(--texto-2); border-radius: 6px; background: var(--superficie);
+}
+.check-candidatura:hover { border-color: var(--destaque); }
+.check-candidatura[aria-pressed="true"] { background: var(--ok-fundo); border-color: transparent; color: var(--ok-texto); }
+.check-candidatura[aria-pressed="true"]::before {
+  content: "✓"; display: inline-flex; align-items: center; justify-content: center; border-color: var(--ok-texto); background: var(--ok-texto); color: var(--ok-fundo); font-size: 0.8rem; line-height: 1;
+}
+.etiqueta-ok { background: var(--ok-fundo); color: var(--ok-texto); font-weight: 600; }
+.etiqueta-encerrada { background: var(--perigo-fundo); color: var(--perigo); font-weight: 600; width: fit-content; }
+.vaga-candidatada { background: var(--superficie-2); border-style: dashed; box-shadow: none; }
+.vaga-candidatada h2 { color: var(--texto-2); }
+
+.toast {
+  position: fixed; z-index: 50; inset: auto var(--e4) var(--e4) var(--e4); margin: 0 auto; width: fit-content; max-width: calc(100vw - 2 * var(--e4));
+  display: flex; align-items: center; gap: var(--e3); padding: var(--e2) var(--e3) var(--e2) var(--e4);
+  background: var(--texto); color: var(--fundo); border: 0; border-radius: var(--r-m); box-shadow: var(--sombra-3); font-weight: 600;
+}
+.toast .botao-link { color: var(--fundo); }
+.toast[hidden] { display: none !important; }
+
+.confirma { padding: var(--e3) var(--e4); background: var(--destaque-suave); border-top: 1px solid var(--borda); }
+.confirma p { font-weight: 600; font-size: 0.9375rem; }
+.confirma .botoes-linha { margin-top: var(--e2); }
+
+.lista-candidaturas { display: grid; gap: var(--e2); margin: 0; padding: 0; list-style: none; }
+.candidatura-item { display: flex; align-items: center; justify-content: space-between; gap: var(--e3); padding: var(--e3); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--r-m); }
+.candidatura-texto { display: grid; gap: 2px; min-width: 0; }
+.candidatura-empresa { color: var(--texto-2); }
+.candidatura-meta { color: var(--texto-2); font-size: var(--t-legenda); }
 
 /* ===== Página adicionar.html (ferramenta só para quem edita) ===== */
 .formulario, .resultado { display: grid; gap: var(--e3); margin-top: var(--e4); padding: var(--e4); background: var(--superficie); border: 1px solid var(--borda); border-radius: var(--r-m); }

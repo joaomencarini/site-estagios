@@ -69,6 +69,15 @@
           <span class="campo-dica">Mostra vagas com qualquer uma das palavras no cargo ou na empresa.</span>
         </label>
       </div>
+
+      <div class="mostrar" role="group" aria-label="Mostrar vagas">
+        <span class="campo-rotulo">Mostrar</span>
+        <div class="segmentos">
+          <button type="button" class="segmento" data-situacao="todas" aria-pressed="true">Todas</button>
+          <button type="button" class="segmento" data-situacao="pendentes" aria-pressed="false">Pendentes</button>
+          <button type="button" class="segmento" data-situacao="candidatadas" aria-pressed="false">Candidatadas</button>
+        </div>
+      </div>
     </section>
 
     <div class="resumo">
@@ -101,7 +110,7 @@
   <footer class="rodape">
     <div class="conteudo">
       <p><strong data-marca="nome">Largada Fin</strong> apenas reúne links. Cada vaga pertence à empresa e à fonte indicadas no cartão; a candidatura é feita na página original.</p>
-      <p>Sem login e sem coleta de dados: seu perfil (inclusive o nome, o currículo e o arquivo anexado, se você os informar) fica só neste navegador e nada é enviado a nenhum servidor.</p>
+      <p>Sem login e sem coleta de dados: seu perfil (inclusive o nome, o currículo, o arquivo anexado e as candidaturas que você marcar, se você os informar) fica só neste navegador e nada é enviado a nenhum servidor.</p>
     </div>
   </footer>
 
@@ -116,6 +125,7 @@
       <div class="abas" role="tablist" aria-label="Partes do perfil">
         <button id="aba-busco" type="button" class="aba" role="tab" aria-selected="true" aria-controls="painel-busco">O que busco</button>
         <button id="aba-curriculo" type="button" class="aba" role="tab" aria-selected="false" aria-controls="painel-curriculo" tabindex="-1">Meu currículo</button>
+        <button id="aba-candidaturas" type="button" class="aba" role="tab" aria-selected="false" aria-controls="painel-candidaturas" tabindex="-1">Candidaturas</button>
       </div>
 
       <div class="painel-corpo">
@@ -180,6 +190,13 @@
           </details>
         </section>
 
+        <!-- Aba 3: minhas candidaturas (cópia salva de cada vaga marcada com "Já me candidatei") -->
+        <section id="painel-candidaturas" class="aba-painel" role="tabpanel" aria-labelledby="aba-candidaturas" tabindex="0" hidden>
+          <h3 id="candidaturas-total" aria-live="polite">0 candidaturas</h3>
+          <p id="candidaturas-vazio" class="dica">Nenhuma candidatura marcada ainda. Use "Já me candidatei" nos cartões das vagas.</p>
+          <ul id="candidaturas-lista" class="lista-candidaturas"></ul>
+        </section>
+
         <p id="aviso-perfil" class="aviso" hidden>
           Não foi possível salvar o perfil neste navegador (o armazenamento está bloqueado).
           Ele continua valendo enquanto esta página estiver aberta.
@@ -193,7 +210,7 @@
               <button id="botao-importar-perfil" type="button" class="botao botao-contorno">Importar perfil</button>
             </div>
             <input id="arquivo-perfil" type="file" accept=".json,application/json" hidden>
-            <p class="dica">O backup guarda só o texto do currículo, não o arquivo PDF ou Word. O arquivo exportado contém seu currículo: não o publique.</p>
+            <p class="dica">O backup guarda o texto do currículo e as candidaturas marcadas, não o arquivo PDF ou Word. O arquivo exportado contém seu currículo: não o publique.</p>
             <button id="botao-limpar-perfil" type="button" class="botao botao-perigo">Limpar meu perfil</button>
             <p class="dica">Apaga tudo deste navegador, inclusive o currículo e o arquivo anexado.</p>
           </div>
@@ -347,10 +364,18 @@
           </div>
 
           <div id="cand-enviar-link" hidden>
-            <a id="cand-abrir-vaga" class="botao botao-primario" target="_blank" rel="noopener noreferrer" href="#">Abrir vaga</a>
+            <a id="cand-abrir-vaga" class="botao botao-primario" target="_blank" rel="noopener noreferrer" href="#">Ver vaga</a>
           </div>
           <p id="cand-mensagem" class="mensagem" role="status" hidden></p>
         </section>
+      </div>
+
+      <div id="cand-confirma" class="confirma" role="group" aria-label="Marcar como candidatado" hidden>
+        <p id="cand-confirma-texto">Você enviou a candidatura? Marcar como candidatado</p>
+        <div id="cand-confirma-botoes" class="botoes-linha">
+          <button id="cand-confirma-sim" type="button" class="botao botao-primario botao-pequeno">Marcar</button>
+          <button id="cand-confirma-nao" type="button" class="botao botao-contorno botao-pequeno">Agora não</button>
+        </div>
       </div>
 
       <footer class="janela-pe">
@@ -359,6 +384,12 @@
       </footer>
     </div>
   </dialog>
+
+  <!-- Aviso rápido com "Desfazer" (o JavaScript o move para dentro da janela aberta, se houver) -->
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden>
+    <span id="toast-texto"></span>
+    <button id="toast-desfazer" type="button" class="botao-link">Desfazer</button>
+  </div>
 
   <!-- Só aparece na impressão (Baixar PDF): recebe uma cópia da página do currículo -->
   <div id="area-impressao" aria-hidden="true"></div>

@@ -5,7 +5,7 @@ const assert = require("node:assert");
 const R = require("../js/regras.js");
 
 const vaga = (extra) => Object.assign({ titulo: "Estágio em Finanças", empresa: "Empresa X", area: "Crédito", cidade: "São Paulo", tipoEmpresa: "Banco", fonte: "Polifinance", dataPublicacao: "2026-09-20" }, extra);
-const perfil = (extra) => Object.assign({ nome: "", categorias: [], cidades: [], tipos: [], modalidades: [], palavras: "", curriculo: "" }, extra);
+const perfil = (extra) => Object.assign({ nome: "", categorias: [], cidades: [], tipos: [], modalidades: [], palavras: "", curriculo: "", candidaturas: [] }, extra);
 const RC = "Risco e Crédito", INV = "Investimentos e Gestão", BIM = "Banco de Investimento e M&A", OPS = "Operações e Backoffice";
 const titulos = (lista) => lista.map(v => v.titulo);
 
@@ -1101,4 +1101,158 @@ test("categorias: multi family office, securitização e renda fixa", () => {
   assert.strictEqual(cat("SECURITIZACAO"), BIM);
   assert.strictEqual(cat("Renda Fixa"), BIM);
   assert.strictEqual(cat("Credit Research"), "Research");
+});
+
+// ---------------- "Já me candidatei" (Etapa 10b) ----------------
+const cand = (extra) => Object.assign({ chave: "https://exemplo.com/vaga-1", titulo: "Estágio Fictício", empresa: "Empresa Fictícia", area: "Risco", data: "2026-10-03" }, extra);
+
+test("chave da vaga: o link, se houver (sem mexer nele, só tirando espaços das pontas)", () => {
+  assert.strictEqual(R.chaveDaVaga({ link: "  https://exemplo.com/v/1?x=Y ", titulo: "A", empresa: "B" }), "https://exemplo.com/v/1?x=Y");
+  assert.strictEqual(R.chaveDaVaga({ link: "https://exemplo.com/v/1", titulo: "Outro", empresa: "Outra" }), R.chaveDaVaga({ link: "https://exemplo.com/v/1", titulo: "A", empresa: "B" }));
+});
+
+test("chave da vaga: sem link vira empresa + cargo sem acento, em minúsculas e com espaços colapsados", () => {
+  assert.strictEqual(R.chaveDaVaga({ empresa: "Banco Fictício", titulo: "Estágio em Crédito" }), "banco ficticio | estagio em credito");
+  assert.strictEqual(R.chaveDaVaga({ empresa: "  BANCO   FICTICIO ", titulo: "ESTAGIO   EM  CRÉDITO", link: "   " }), "banco ficticio | estagio em credito");   // acento, caixa e espaços diferentes: mesma chave
+  assert.notStrictEqual(R.chaveDaVaga({ empresa: "Banco A", titulo: "Estágio" }), R.chaveDaVaga({ empresa: "Banco B", titulo: "Estágio" }));
+  assert.notStrictEqual(R.chaveDaVaga({ empresa: "A", titulo: "B C" }), R.chaveDaVaga({ empresa: "A B", titulo: "C" }));   // o separador evita confundir empresa e cargo
+});
+
+test("chave da vaga: colisão = mesma vaga; entradas estranhas viram chave vazia", () => {
+  const lista = R.adicionarCandidatura([], { empresa: "Banco Fictício", titulo: "Estágio" }, "2026-10-03").lista;
+  assert.strictEqual(lista.length, 1);
+  assert.ok(R.candidaturaDaVaga(lista, { empresa: "BANCO FICTICIO", titulo: "estagio" }) !== null);   // outra grafia da mesma vaga conta como marcada
+  assert.strictEqual(R.adicionarCandidatura(lista, { empresa: "BANCO FICTICIO", titulo: "estagio" }, "2026-10-04").lista.length, 1);
+  [null, undefined, 5, "texto", {}, { link: "" }, { titulo: "   ", empresa: "" }].forEach((v) => assert.strictEqual(R.chaveDaVaga(v), "", String(JSON.stringify(v))));
+  assert.strictEqual(R.adicionarCandidatura([], {}, "2026-10-03").motivo, "sem-chave");
+});
+
+test("candidatura: validação de itens (ignora inválidos, limpa texto, confere a data)", () => {
+  assert.deepStrictEqual(R.sanitizarCandidatura(cand()), cand());
+  assert.deepStrictEqual(R.sanitizarCandidatura(cand({ titulo: "  A\n<b>B</b>\t ", empresa: "<script>x</script>" })), cand({ titulo: "A <b>B</b>", empresa: "<script>x</script>" }));   // fica como texto
+  const invalidos = [null, undefined, "x", 5, [], {}, cand({ chave: "" }), cand({ chave: 5 }), cand({ chave: "x".repeat(501) }), cand({ chave: "a\nb" }),
+    cand({ titulo: "" }), cand({ titulo: 7 }), cand({ empresa: "   " }), cand({ data: "2026-02-30" }), cand({ data: "03/10/2026" }), cand({ data: "2026-13-01" }), cand({ data: 20261003 }), cand({ data: undefined })];
+  invalidos.forEach((item, i) => assert.strictEqual(R.sanitizarCandidatura(item), null, "inválido " + i));
+  assert.strictEqual(R.sanitizarCandidatura(cand({ area: undefined })).area, "");   // a área pode faltar
+  assert.strictEqual(R.sanitizarCandidatura(cand({ titulo: "t".repeat(500) })).titulo.length, 200);
+  assert.strictEqual(R.diaMes("2026-10-03"), "03/10");
+  assert.strictEqual(R.diaMes("2026-10-3"), "");
+  assert.strictEqual(R.dataIsoValida("2024-02-29"), true);
+  assert.strictEqual(R.dataIsoValida("2026-02-29"), false);
+});
+
+test("candidaturas no perfil: carregam e salvam sem apagar o resto; perfil antigo sem o campo continua valendo", () => {
+  const p = R.sanitizarPerfil({ nome: "Pessoa Fictícia", cidades: ["São Paulo"], candidaturas: [cand(), { lixo: true }, cand({ chave: "b", titulo: "Outra" })] });
+  assert.strictEqual(p.candidaturas.length, 2);
+  assert.deepStrictEqual(R.sanitizarPerfil({ nome: "Pessoa Fictícia", cidades: ["São Paulo"] }).candidaturas, []);
+  [undefined, null, "x", 7, {}, { 0: cand() }].forEach((valor) => assert.deepStrictEqual(R.sanitizarPerfil({ candidaturas: valor }).candidaturas, []));
+  // ida e volta pelo armazenamento (mesma chave do perfil)
+  const guardado = {};
+  const armazenamento = { getItem: (k) => (k in guardado ? guardado[k] : null), setItem: (k, v) => { guardado[k] = v; }, removeItem: (k) => { delete guardado[k]; } };
+  assert.strictEqual(R.salvarPerfil(armazenamento, p), true);
+  assert.deepStrictEqual(Object.keys(guardado), ["estagiosPerfil"]);
+  assert.deepStrictEqual(R.lerPerfil(armazenamento).candidaturas, p.candidaturas);
+  assert.strictEqual(R.lerPerfil(armazenamento).nome, "Pessoa Fictícia");
+  R.apagarPerfil(armazenamento);
+  assert.deepStrictEqual(R.lerPerfil(armazenamento).candidaturas, []);   // "Limpar meu perfil" apaga tudo, inclusive as candidaturas
+  assert.deepStrictEqual(R.lerPerfil(null).candidaturas, []);             // localStorage bloqueado: sem erro
+  assert.strictEqual(R.perfilVazio({ candidaturas: p.candidaturas }), true);                              // candidaturas não contam como "perfil preenchido" (não mudam filtro nem ordem)
+});
+
+test("limite de 500 candidaturas: ao carregar, ao importar e ao marcar", () => {
+  const muitas = Array.from({ length: 700 }, (_, i) => cand({ chave: "https://exemplo.com/v/" + i, titulo: "Estágio " + i }));
+  assert.strictEqual(R.sanitizarCandidaturas(muitas).length, 500);
+  assert.strictEqual(R.sanitizarCandidaturas(muitas)[0].titulo, "Estágio 0");           // ficam as primeiras
+  assert.strictEqual(R.sanitizarPerfil({ candidaturas: muitas }).candidaturas.length, 500);
+  const cheia = R.sanitizarCandidaturas(muitas);
+  const tentativa = R.adicionarCandidatura(cheia, { link: "https://exemplo.com/novo", titulo: "Novo", empresa: "Nova" }, "2026-10-03");
+  assert.strictEqual(tentativa.ok, false);
+  assert.strictEqual(tentativa.motivo, "limite");
+  assert.strictEqual(tentativa.lista.length, 500);                                      // nada some em silêncio
+  // marcar uma vaga que já está na lista não conta como novo item, mesmo com a lista cheia
+  assert.strictEqual(R.adicionarCandidatura(cheia, { link: "https://exemplo.com/v/3", titulo: "x", empresa: "y" }, "2026-10-03").ok, true);
+  // importar: a mescla também respeita o limite
+  assert.strictEqual(R.mesclarCandidaturas(cheia, [cand({ chave: "outra" })]).length, 500);
+  assert.strictEqual(R.adicionarCandidatura(cheia.slice(0, 499), { link: "https://exemplo.com/novo", titulo: "Novo", empresa: "Nova" }, "2026-10-03").lista.length, 500);
+});
+
+test("exportar e importar: as candidaturas vão no arquivo e a importação ignora itens inválidos", () => {
+  const p = R.sanitizarPerfil({ nome: "Pessoa Fictícia", candidaturas: [cand(), cand({ chave: "b", titulo: "Outra", data: "2026-09-01" })] });
+  const texto = R.montarExportacao(p);
+  assert.ok(texto.includes('"candidaturas"'));
+  assert.deepStrictEqual(R.validarImportacao(texto).perfil.candidaturas, p.candidaturas);
+  const manipulado = JSON.stringify({ formato: "estagios-perfil", versao: 1, perfil: { candidaturas: [cand(), { chave: "", titulo: "x" }, "lixo", cand({ data: "ontem", chave: "c" })] } });
+  const r = R.validarImportacao(manipulado);
+  assert.strictEqual(r.ok, true);                                       // um arquivo só com candidaturas já é um perfil válido
+  assert.strictEqual(r.perfil.candidaturas.length, 1);
+  assert.strictEqual(R.validarImportacao(JSON.stringify({ formato: "estagios-perfil", versao: 1, perfil: { candidaturas: "não é lista" } })).perfil.candidaturas.length, 0);
+  // 500 candidaturas cabem no limite de tamanho do arquivo importado
+  const grande = R.montarExportacao(R.sanitizarPerfil({ candidaturas: Array.from({ length: 500 }, (_, i) => cand({ chave: "https://exemplo.com/vaga/" + "x".repeat(150) + i, titulo: "T".repeat(150), empresa: "E".repeat(150), area: "A".repeat(150) })) }));
+  assert.ok(grande.length < R.TAMANHO_MAXIMO_IMPORTACAO, grande.length);
+  assert.strictEqual(R.validarImportacao(grande).perfil.candidaturas.length, 500);
+});
+
+test("importar: mescla por chave mantendo o item mais antigo (e as atuais primeiro)", () => {
+  const atuais = [cand({ chave: "a", data: "2026-10-05", titulo: "A atual" }), cand({ chave: "b", data: "2026-09-01", titulo: "B atual" })];
+  const importadas = [cand({ chave: "a", data: "2026-10-01", titulo: "A importada" }), cand({ chave: "b", data: "2026-09-20", titulo: "B importada" }), cand({ chave: "c", titulo: "C importada" }), { lixo: 1 }];
+  const m = R.mesclarCandidaturas(atuais, importadas);
+  assert.deepStrictEqual(m.map((i) => i.chave), ["a", "b", "c"]);
+  assert.strictEqual(m[0].data, "2026-10-01");           // a importada era mais antiga: vale
+  assert.strictEqual(m[0].titulo, "A importada");
+  assert.strictEqual(m[1].titulo, "B atual");             // a atual era mais antiga: vale
+  assert.strictEqual(m[1].data, "2026-09-01");
+  const igual = R.mesclarCandidaturas([cand({ chave: "x", titulo: "primeiro" })], [cand({ chave: "x", titulo: "segundo" })]);
+  assert.strictEqual(igual[0].titulo, "primeiro");        // mesma data: fica a que já estava
+  assert.deepStrictEqual(R.mesclarCandidaturas(undefined, null), []);
+  assert.strictEqual(R.mesclarCandidaturas(atuais, atuais).length, 2);   // importar o mesmo arquivo duas vezes não duplica
+});
+
+test("marcar e desmarcar: adicionar, repetir, remover", () => {
+  const vaga1 = { link: "https://exemplo.com/v/1", titulo: "Estágio <b>X</b>", empresa: "Empresa Fictícia", area: "Risco" };
+  const a = R.adicionarCandidatura([], vaga1, "2026-10-03");
+  assert.strictEqual(a.ok, true);
+  assert.deepStrictEqual(a.lista, [{ chave: "https://exemplo.com/v/1", titulo: "Estágio <b>X</b>", empresa: "Empresa Fictícia", area: "Risco", data: "2026-10-03" }]);
+  assert.strictEqual(R.adicionarCandidatura(a.lista, vaga1, "2026-10-09").lista[0].data, "2026-10-03");   // marcar de novo não muda a data
+  assert.strictEqual(R.adicionarCandidatura([], vaga1, "ontem").motivo, "invalida");                        // data inválida não grava
+  assert.deepStrictEqual(R.removerCandidatura(a.lista, "https://exemplo.com/v/1"), []);
+  assert.strictEqual(R.removerCandidatura(a.lista, "outra").length, 1);
+});
+
+test("filtro Mostrar: Todas, Pendentes e Candidatadas (combina com os outros filtros e com as contagens)", () => {
+  const v1 = vf({ titulo: "Um", link: "https://exemplo.com/1" });
+  const v2 = vf({ titulo: "Dois", link: "https://exemplo.com/2", cidade: "Rio de Janeiro" });
+  const v3 = vf({ titulo: "Três", link: undefined, empresa: "Banco Fictício" });
+  const marcadas = new Set([R.chaveDaVaga(v1), R.chaveDaVaga(v3)]);
+  const lista = [v1, v2, v3];
+  const com = (situacao, extra) => titulos(R.filtrarVagas(lista, Object.assign({ situacao, candidatadas: marcadas }, extra), perfil(), false));
+  assert.deepStrictEqual(com("todas"), ["Um", "Dois", "Três"]);
+  assert.deepStrictEqual(com(undefined), ["Um", "Dois", "Três"]);
+  assert.deepStrictEqual(com("pendentes"), ["Dois"]);
+  assert.deepStrictEqual(com("candidatadas"), ["Um", "Três"]);
+  assert.deepStrictEqual(com("candidatadas", { cidade: "São Paulo" }), ["Um", "Três"]);   // combina ("e") com cidade, busca etc.
+  assert.deepStrictEqual(com("pendentes", { cidade: "São Paulo" }), []);
+  assert.deepStrictEqual(com("candidatadas", { busca: "tres" }), ["Três"]);
+  assert.deepStrictEqual(com("valor estranho"), ["Um", "Dois", "Três"]);                   // valor desconhecido = todas
+  assert.deepStrictEqual(R.contarSituacoes(lista, marcadas), { todas: 3, pendentes: 1, candidatadas: 2 });
+  assert.deepStrictEqual(R.contarSituacoes([], marcadas), { todas: 0, pendentes: 0, candidatadas: 0 });
+  assert.deepStrictEqual(R.contarSituacoes(lista, [R.chaveDaVaga(v2)]), { todas: 3, pendentes: 2, candidatadas: 1 });   // aceita lista em vez de Set
+  // a ordenação e a pontuação continuam as mesmas depois do filtro
+  const ordenadas = R.ordenarVagas(R.filtrarVagas(lista, { situacao: "candidatadas", candidatadas: marcadas }, perfil({ palavras: "tres" }), false), "relevancia", perfil({ palavras: "tres" }));
+  assert.deepStrictEqual(titulos(ordenadas), ["Três", "Um"]);
+});
+
+test("filtro Mostrar: lembrar a escolha no localStorage (com try/catch)", () => {
+  const guardado = {};
+  const arm = { getItem: (k) => (k in guardado ? guardado[k] : null), setItem: (k, v) => { guardado[k] = v; } };
+  assert.strictEqual(R.lerSituacao(arm), "todas");
+  assert.strictEqual(R.salvarSituacao(arm, "pendentes"), true);
+  assert.strictEqual(guardado.estagiosMostrar, "pendentes");
+  assert.strictEqual(R.lerSituacao(arm), "pendentes");
+  guardado.estagiosMostrar = "<script>";
+  assert.strictEqual(R.lerSituacao(arm), "todas");                       // valor estranho guardado vira "todas"
+  assert.strictEqual(R.lerSituacao(null), "todas");
+  assert.strictEqual(R.salvarSituacao(null, "pendentes"), false);
+  const bloqueado = { getItem() { throw new Error("bloqueado"); }, setItem() { throw new Error("bloqueado"); } };
+  assert.strictEqual(R.lerSituacao(bloqueado), "todas");
+  assert.strictEqual(R.salvarSituacao(bloqueado, "candidatadas"), false);
 });

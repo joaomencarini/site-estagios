@@ -91,7 +91,10 @@ const TAMANHO_MAXIMO_NOME = 60;
 const TAMANHO_MAXIMO_CURRICULO = 15000;     // caracteres do texto do currículo
 const FORMATO_EXPORTACAO = "estagios-perfil";  // identifica o arquivo "Exportar perfil"
 const VERSAO_EXPORTACAO = 1;
-const TAMANHO_MAXIMO_IMPORTACAO = 100000;   // caracteres do arquivo importado
+const TAMANHO_MAXIMO_IMPORTACAO = 400000;   // caracteres do arquivo importado (cabe o currículo e 500 candidaturas)
+const LIMITE_CANDIDATURAS = 500;            // candidaturas marcadas guardadas no perfil
+const CHAVE_SITUACAO = "estagiosMostrar";    // localStorage: "Mostrar: Todas | Pendentes | Candidatadas"
+const SITUACOES = ["todas", "pendentes", "candidatadas"];
 const LIMITE_MAILTO = 1800;                 // acima disso o link "mailto:" pode ser cortado pelo app de e-mail
 
 // Modalidades aceitas no campo "modalidade" das vagas (e no perfil), com o texto mostrado ao usuário.
@@ -195,7 +198,7 @@ function limparCurriculo(texto) {
 
 // Perfil vazio: nada escolhido
 function novoPerfil() {
-  return { nome: "", categorias: [], cidades: [], tipos: [], modalidades: [], palavras: "", curriculo: "" };
+  return { nome: "", categorias: [], cidades: [], tipos: [], modalidades: [], palavras: "", curriculo: "", candidaturas: [] };
 }
 
 // Garante que o perfil tenha o formato certo (também protege contra dados estranhos guardados no navegador)
@@ -227,6 +230,7 @@ function sanitizarPerfil(bruto) {
   }
   perfil.nome = limparNome(bruto.nome);
   perfil.curriculo = limparCurriculo(bruto.curriculo);
+  perfil.candidaturas = sanitizarCandidaturas(bruto.candidaturas);
   if (Array.isArray(bruto.modalidades)) {
     bruto.modalidades.forEach(function (item) {
       const valor = modalidadePadrao(item);
@@ -355,7 +359,8 @@ function palavrasDeBusca(texto) {
 // - categoria: categoria da área da vaga (vaga de área "Diversas" passa em qualquer categoria);
 // - modalidade: igual à da vaga; vaga SEM modalidade informada continua aparecendo (nunca se presume);
 // - busca: TODAS as palavras aparecem no título ou na empresa (sem acento nem maiúsculas);
-// - palavras: pelo menos UMA das palavras-chave aparece no título ou na empresa.
+// - palavras: pelo menos UMA das palavras-chave aparece no título ou na empresa;
+// - situacao: "pendentes" ou "candidatadas" (ver passaFiltroSituacao); vazio = todas.
 function passaFiltrosPagina(vaga, filtros) {
   const f = filtros || {};
   if (f.area && vaga.area !== f.area) {
@@ -391,7 +396,8 @@ function passaFiltrosPagina(vaga, filtros) {
   if (palavras.length > 0 && !palavras.some(function (p) { return texto.includes(p); })) {
     return false;
   }
-  return true;
+  // situacao ("pendentes" ou "candidatadas") usa f.candidatadas = chaves das vagas já marcadas
+  return passaFiltroSituacao(vaga, f.situacao, f.candidatadas);
 }
 
 // Situação do prazo para o cartão: { nivel, texto }. nivel: "urgente" (até 3 dias), "atencao" (até 7 dias),
@@ -515,7 +521,7 @@ function validarImportacao(texto) {
   if (!ehObjeto(dados.perfil)) {
     return falha("O arquivo não tem os dados do perfil.");
   }
-  const conhecidos = ["nome", "categorias", "areas", "cidades", "tipos", "modalidades", "palavras", "curriculo"];
+  const conhecidos = ["nome", "categorias", "areas", "cidades", "tipos", "modalidades", "palavras", "curriculo", "candidaturas"];
   if (!conhecidos.some(function (campo) { return Object.prototype.hasOwnProperty.call(dados.perfil, campo); })) {
     return falha("O arquivo não tem nenhum campo de perfil conhecido.");
   }
@@ -651,6 +657,170 @@ function salvarPerfil(armazenamento, perfil) {
 }
 
 // No Node (scripts) exporta as funções; no navegador elas já ficam disponíveis direto
+// ===== "Já me candidatei" (Etapa 10b) =====
+// As candidaturas marcadas ficam no perfil (localStorage, só neste navegador), como uma cópia da vaga:
+// { chave, titulo, empresa, area, data }. Assim o item continua na lista mesmo depois que a vaga sai do site.
+
+// Identificador estável de uma vaga: o link, se houver; senão "empresa | cargo" sem acento, em minúsculas e
+// com espaços colapsados. Duas vagas com a mesma chave são tratadas como a mesma. Sem dados: "".
+function chaveDaVaga(vaga) {
+  if (!vaga || typeof vaga !== "object") {
+    return "";
+  }
+  const link = typeof vaga.link === "string" ? vaga.link.trim() : "";
+  if (link !== "") {
+    return link;
+  }
+  const simplificar = function (texto) {
+    return normalizarTexto(typeof texto === "string" ? texto : "").replace(/\s+/g, " ");
+  };
+  const empresa = simplificar(vaga.empresa);
+  const titulo = simplificar(vaga.titulo);
+  return empresa === "" && titulo === "" ? "" : empresa + " | " + titulo;
+}
+
+// "2026-10-03" é uma data de verdade? (rejeita 2026-02-30, 2026-13-01 e textos)
+function dataIsoValida(texto) {
+  if (typeof texto !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+    return false;
+  }
+  const [ano, mes, dia] = texto.split("-").map(Number);
+  const d = new Date(Date.UTC(ano, mes - 1, dia));
+  return d.getUTCFullYear() === ano && d.getUTCMonth() === mes - 1 && d.getUTCDate() === dia;
+}
+
+// "2026-10-03" vira "03/10" (para o selo "Candidatado em 03/10"); data inválida vira ""
+function diaMes(dataIso) {
+  return dataIsoValida(dataIso) ? dataIso.slice(8, 10) + "/" + dataIso.slice(5, 7) : "";
+}
+
+// Confere uma candidatura guardada ou importada. Devolve a candidatura limpa ou null (item inválido é ignorado).
+function sanitizarCandidatura(bruto) {
+  if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) {
+    return null;
+  }
+  const chave = typeof bruto.chave === "string" ? bruto.chave.trim() : "";
+  if (chave === "" || chave.length > 500 || /[\u0000-\u001f\u007f]/.test(chave)) {
+    return null;
+  }
+  const curto = function (texto) { return linhaUnica(texto).slice(0, 200); };
+  const titulo = curto(bruto.titulo);
+  const empresa = curto(bruto.empresa);
+  if (titulo === "" || empresa === "" || !dataIsoValida(bruto.data)) {
+    return null;
+  }
+  return { chave: chave, titulo: titulo, empresa: empresa, area: curto(bruto.area), data: bruto.data };
+}
+
+// Lista de candidaturas válidas: ignora itens inválidos, junta repetidos (mesma chave) ficando com o item mais
+// ANTIGO, mantém a ordem de chegada e guarda no máximo LIMITE_CANDIDATURAS.
+function sanitizarCandidaturas(lista) {
+  if (!Array.isArray(lista)) {
+    return [];
+  }
+  const porChave = {};
+  const ordem = [];
+  lista.forEach(function (bruto) {
+    const item = sanitizarCandidatura(bruto);
+    if (item === null) {
+      return;
+    }
+    const existente = Object.prototype.hasOwnProperty.call(porChave, item.chave) ? porChave[item.chave] : null;
+    if (existente === null) {
+      if (ordem.length < LIMITE_CANDIDATURAS) {
+        porChave[item.chave] = item;
+        ordem.push(item.chave);
+      }
+    } else if (item.data < existente.data) {
+      porChave[item.chave] = item;
+    }
+  });
+  return ordem.map(function (chave) { return porChave[chave]; });
+}
+
+// Mescla duas listas (ao importar): união por chave, mantendo o item mais antigo; as atuais vêm primeiro
+function mesclarCandidaturas(atuais, importadas) {
+  return sanitizarCandidaturas((Array.isArray(atuais) ? atuais : []).concat(Array.isArray(importadas) ? importadas : []));
+}
+
+// A vaga já foi marcada? Devolve a candidatura ou null.
+function candidaturaDaVaga(lista, vaga) {
+  const chave = chaveDaVaga(vaga);
+  const achada = chave === "" || !Array.isArray(lista) ? null : lista.find(function (item) { return item && item.chave === chave; });
+  return achada || null;
+}
+
+// Marca a vaga como candidatada na data "hoje" (AAAA-MM-DD). Devolve { ok, lista, motivo }.
+// Já marcada: ok, lista igual. motivo: "sem-chave", "invalida" (dados ou data inválidos) ou "limite" (500 itens).
+function adicionarCandidatura(lista, vaga, hoje) {
+  const atual = sanitizarCandidaturas(lista);
+  const chave = chaveDaVaga(vaga);
+  if (chave === "") {
+    return { ok: false, lista: atual, motivo: "sem-chave" };
+  }
+  if (candidaturaDaVaga(atual, vaga) !== null) {
+    return { ok: true, lista: atual, motivo: "" };
+  }
+  const item = sanitizarCandidatura({ chave: chave, titulo: vaga.titulo, empresa: vaga.empresa, area: vaga.area, data: hoje });
+  if (item === null) {
+    return { ok: false, lista: atual, motivo: "invalida" };
+  }
+  if (atual.length >= LIMITE_CANDIDATURAS) {
+    return { ok: false, lista: atual, motivo: "limite" };
+  }
+  return { ok: true, lista: atual.concat([item]), motivo: "" };
+}
+
+function removerCandidatura(lista, chave) {
+  return sanitizarCandidaturas(lista).filter(function (item) { return item.chave !== chave; });
+}
+
+// Coleção (Set ou lista) de chaves tem esta chave?
+function temChave(colecao, chave) {
+  if (colecao && typeof colecao.has === "function") {
+    return colecao.has(chave);
+  }
+  return Array.isArray(colecao) && colecao.indexOf(chave) >= 0;
+}
+
+// "todas", "pendentes" ou "candidatadas" (qualquer outra coisa vira "todas")
+function normalizarSituacao(valor) {
+  return SITUACOES.indexOf(valor) >= 0 ? valor : "todas";
+}
+
+// Filtro "Mostrar": Pendentes = ainda sem candidatura marcada; Candidatadas = já marcadas. "chaves" = chaves marcadas.
+function passaFiltroSituacao(vaga, situacao, chaves) {
+  const modo = normalizarSituacao(situacao);
+  if (modo === "todas") {
+    return true;
+  }
+  const marcada = temChave(chaves, chaveDaVaga(vaga));
+  return modo === "candidatadas" ? marcada : !marcada;
+}
+
+// Contagens para "Todas (N) | Pendentes (N) | Candidatadas (N)" sobre a lista de vagas dada
+function contarSituacoes(lista, chaves) {
+  const marcadas = lista.filter(function (vaga) { return temChave(chaves, chaveDaVaga(vaga)); }).length;
+  return { todas: lista.length, pendentes: lista.length - marcadas, candidatadas: marcadas };
+}
+
+// Lembra a escolha do filtro "Mostrar" (localStorage, com try/catch; sem armazenamento, não lembra e não dá erro)
+function lerSituacao(armazenamento) {
+  try {
+    return normalizarSituacao(armazenamento ? armazenamento.getItem(CHAVE_SITUACAO) : null);
+  } catch (erro) {
+    return "todas";
+  }
+}
+function salvarSituacao(armazenamento, situacao) {
+  try {
+    armazenamento.setItem(CHAVE_SITUACAO, normalizarSituacao(situacao));
+    return true;
+  } catch (erro) {
+    return false;
+  }
+}
+
 // ===== Reescrever currículo para a vaga (Etapa 9c) =====
 // O site NÃO chama IA: ele monta um prompt para o aluno copiar, e depois lê (parse) a resposta colada.
 // A resposta da IA é só DADO: nunca é executada nem entra no HTML como código.
@@ -1023,5 +1193,7 @@ if (typeof module !== "undefined" && module.exports) {
     montarMailtoComCorpo, TAMANHO_MAXIMO_ARQUIVO, extensaoArquivo, validarArquivoCurriculo, limparNomeArquivo,
     detectarFormatoArquivo, conferirConteudoArquivo, formatarTamanho, formatarDataArquivo, prepararTextoExtraido,
     dadosCompartilhar, BLOCOS_CURRICULO, TAMANHO_MAXIMO_RESPOSTA, idiomaDaVaga, escaparMarcadoresResposta, montarPromptReescrita,
-    palavrasDeBusca, situacaoPrazo, limparLinhaMarkdown, lerMarcadorLinha, linhasDeLista, lerRespostaCurriculo, rotuloBlocoCurriculo, nomeCurriculoPdf };
+    LIMITE_CANDIDATURAS, CHAVE_SITUACAO, SITUACOES, chaveDaVaga, dataIsoValida, diaMes, sanitizarCandidatura, sanitizarCandidaturas,
+    mesclarCandidaturas, candidaturaDaVaga, adicionarCandidatura, removerCandidatura, normalizarSituacao, passaFiltroSituacao,
+    contarSituacoes, lerSituacao, salvarSituacao, palavrasDeBusca, situacaoPrazo, limparLinhaMarkdown, lerMarcadorLinha, linhasDeLista, lerRespostaCurriculo, rotuloBlocoCurriculo, nomeCurriculoPdf };
 }

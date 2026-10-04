@@ -22,10 +22,17 @@ const listaChips = document.getElementById("chips-lista");
 const contador = document.getElementById("contador");
 const selectOrdenar = document.getElementById("ordenar");
 const saudacao = document.getElementById("saudacao");
+const botoesSituacao = Array.from(document.querySelectorAll(".segmento"));
+const toast = document.getElementById("toast");
+const toastTexto = document.getElementById("toast-texto");
+const toastDesfazer = document.getElementById("toast-desfazer");
+const listaCandidaturas = document.getElementById("candidaturas-lista");
+const totalCandidaturas = document.getElementById("candidaturas-total");
+const vazioCandidaturas = document.getElementById("candidaturas-vazio");
 
 const painelPerfil = document.getElementById("painel-perfil");
-const abas = [document.getElementById("aba-busco"), document.getElementById("aba-curriculo")];
-const paineisAbas = [document.getElementById("painel-busco"), document.getElementById("painel-curriculo")];
+const abas = [document.getElementById("aba-busco"), document.getElementById("aba-curriculo"), document.getElementById("aba-candidaturas")];
+const paineisAbas = [document.getElementById("painel-busco"), document.getElementById("painel-curriculo"), document.getElementById("painel-candidaturas")];
 const caixaNome = document.getElementById("perfil-nome");
 const caixaModalidades = document.getElementById("perfil-modalidades");
 const caixaPalavras = document.getElementById("perfil-palavras");
@@ -66,6 +73,7 @@ function obterArmazenamento() {
 const armazenamento = obterArmazenamento();
 let perfil = lerPerfil(armazenamento);  // regras.js: nunca dá erro, devolve perfil vazio se algo falhar
 let modoOrdem = "relevancia";
+let situacao = lerSituacao(armazenamento);  // "Mostrar": todas, pendentes ou candidatadas (lembrada no localStorage)
 let filtroPerfilPausado = false;  // "Mostrar todas as vagas": desliga o filtro do perfil sem apagá-lo (só nesta visita)
 
 // Transforma "2026-09-29" em "29/09/2026"
@@ -201,13 +209,133 @@ function prenderFoco(caixa) {
   });
 }
 
+// ===== "Já me candidatei" =====
+
+// Chaves das vagas marcadas (para o filtro e para os cartões) e das vagas que ainda estão no site
+function chavesMarcadas() {
+  return new Set(perfil.candidaturas.map(function (item) { return item.chave; }));
+}
+function chavesNoSite() {
+  return new Set(vagasAtivas.map(chaveDaVaga));
+}
+
+let temporizadorToast = null;
+let desfazerAtual = null;
+
+// Aviso rápido com "Desfazer" por 6 segundos (texto sempre como texto puro)
+function mostrarToast(texto, aoDesfazer) {
+  clearTimeout(temporizadorToast);
+  desfazerAtual = aoDesfazer || null;
+  toastTexto.textContent = texto;
+  toastDesfazer.hidden = desfazerAtual === null;
+  // Com uma janela aberta, o resto da página fica "inerte" (não dá para clicar): o aviso vai para dentro dela.
+  (document.querySelector("dialog[open]") || document.body).appendChild(toast);
+  toast.hidden = false;
+  temporizadorToast = setTimeout(esconderToast, 6000);
+}
+function esconderToast() {
+  clearTimeout(temporizadorToast);
+  desfazerAtual = null;
+  toast.hidden = true;
+}
+
+// Guarda o perfil depois de mudar as candidaturas. Sem localStorage, a marcação vale só nesta visita (com aviso).
+function guardarCandidaturas(novaLista) {
+  perfil = Object.assign({}, perfil, { candidaturas: novaLista });
+  const salvou = salvarPerfil(armazenamento, perfil);
+  avisoPerfil.hidden = salvou;
+  return salvou;
+}
+
+// Depois de mudar as candidaturas: redesenha a lista (cartões e contagens) e a aba "Candidaturas"
+function atualizarCandidaturas(chaveFoco) {
+  mostrarVagas();
+  mostrarCandidaturasDoPerfil();
+  if (chaveFoco) {
+    const alvo = Array.from(listaVagas.querySelectorAll(".check-candidatura")).find(function (b) { return b.dataset.chave === chaveFoco; });
+    (alvo || contador).focus();
+  }
+}
+
+// Marca a vaga como candidatada hoje. "silencioso" = sem aviso rápido (a janela de candidatura mostra o dela).
+function marcarCandidatura(vaga, silencioso) {
+  const resultado = adicionarCandidatura(perfil.candidaturas, vaga, hoje);
+  if (!resultado.ok) {
+    mostrarToast(resultado.motivo === "limite"
+      ? "Limite de " + LIMITE_CANDIDATURAS + " candidaturas. Remova alguma em Meu perfil para marcar outra."
+      : "Não consegui marcar esta vaga.", null);
+    return false;
+  }
+  const jaEstava = candidaturaDaVaga(perfil.candidaturas, vaga) !== null;
+  const salvou = guardarCandidaturas(resultado.lista);
+  atualizarCandidaturas(chaveDaVaga(vaga));
+  if (!silencioso && !jaEstava) {
+    const item = candidaturaDaVaga(perfil.candidaturas, vaga);
+    mostrarToast(salvou ? "Marcado como candidatado." : "Marcado, mas não foi possível salvar neste navegador: vale só nesta visita.", function () {
+      desmarcarCandidatura(item.chave, true);
+    });
+  }
+  return salvou;
+}
+
+// Tira a marcação (sem pedir confirmação). Mostra "Desfazer" por alguns segundos, que devolve a MESMA candidatura (mesma data).
+function desmarcarCandidatura(chave, silencioso) {
+  const item = perfil.candidaturas.find(function (c) { return c.chave === chave; });
+  if (!item) {
+    return;
+  }
+  const salvou = guardarCandidaturas(removerCandidatura(perfil.candidaturas, chave));
+  atualizarCandidaturas(chave);
+  if (!silencioso) {
+    mostrarToast(salvou ? "Candidatura desmarcada." : "Desmarcada (vale só nesta visita: não foi possível salvar neste navegador).", function () {
+      guardarCandidaturas(sanitizarCandidaturas(perfil.candidaturas.concat([item])));
+      atualizarCandidaturas(chave);
+    });
+  } else {
+    esconderToast();
+  }
+}
+
+// Aba "Candidaturas" do Meu perfil: usa a cópia salva (o item continua aqui depois que a vaga sai do site)
+function mostrarCandidaturasDoPerfil() {
+  const lista = perfil.candidaturas.map(function (item, indice) { return { item: item, indice: indice }; });
+  lista.sort(function (a, b) { return b.item.data.localeCompare(a.item.data) || b.indice - a.indice; });   // mais recentes primeiro
+  const total = lista.length;
+  totalCandidaturas.textContent = total + (total === 1 ? " candidatura" : " candidaturas");
+  vazioCandidaturas.hidden = total > 0;
+  listaCandidaturas.replaceChildren();
+  const noSite = chavesNoSite();
+  lista.forEach(function (par) {
+    const item = par.item;
+    const li = criar("li", "candidatura-item");
+    const texto = criar("div", "candidatura-texto");
+    texto.appendChild(criar("strong", "candidatura-cargo", item.titulo));
+    texto.appendChild(criar("span", "candidatura-empresa", item.empresa));
+    const meta = criar("span", "candidatura-meta", "Candidatado em " + formatarData(item.data));
+    texto.appendChild(meta);
+    if (!noSite.has(item.chave)) {
+      texto.appendChild(criar("span", "etiqueta etiqueta-encerrada", "vaga encerrada"));
+    }
+    li.appendChild(texto);
+    const remover = criar("button", "botao-link", "Remover");
+    remover.type = "button";
+    remover.setAttribute("aria-label", "Remover candidatura: " + item.titulo + ", " + item.empresa);
+    remover.addEventListener("click", function () {
+      desmarcarCandidatura(item.chave, false);
+      (listaCandidaturas.querySelector(".botao-link") || document.getElementById("aba-candidaturas")).focus();
+    });
+    li.appendChild(remover);
+    listaCandidaturas.appendChild(li);
+  });
+}
+
 // ===== Cartões de vaga =====
 
 // Monta o cartão de uma vaga. "combina" = true mostra a etiqueta "Combina com você";
 // "avisarSemModalidade" = true (filtro de modalidade em ação) mostra "Modalidade não informada" nas vagas sem esse dado.
 // Um único botão principal: "Ver vaga" (tem link) ou "Candidatar-se" (só e-mail). Tudo o mais fica na janela de candidatura.
-function criarCartao(vaga, combina, avisarSemModalidade) {
-  const cartao = criar("article", "vaga");
+function criarCartao(vaga, combina, avisarSemModalidade, candidatura) {
+  const cartao = criar("article", "vaga" + (candidatura ? " vaga-candidatada" : ""));
   cartao.appendChild(criar("h2", "", vaga.titulo));
   cartao.appendChild(criar("p", "vaga-empresa", vaga.empresa));
 
@@ -226,6 +354,9 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
   const modalidade = modalidadeDaVaga(vaga);
   if (modalidade !== "") {
     etiquetas.appendChild(criar("span", "etiqueta", ROTULOS_MODALIDADE[modalidade]));
+  }
+  if (candidatura) {
+    etiquetas.appendChild(criar("span", "etiqueta etiqueta-ok", "✓ Candidatado em " + diaMes(candidatura.data)));
   }
   if (combina) {
     etiquetas.appendChild(criar("span", "etiqueta etiqueta-combina", "Combina com você"));
@@ -247,11 +378,11 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
   if (tipo !== "") {
     const acoes = criar("div", "vaga-acoes");
     if (linkSeguro(vaga.link)) {
-      const ver = criar("a", "botao botao-primario", "Ver vaga");
+      const ver = criar("a", "botao botao-primario", candidatura ? "Ver novamente" : "Ver vaga");
       ver.href = vaga.link;
       ver.target = "_blank";
       ver.rel = "noopener noreferrer";
-      ver.setAttribute("aria-label", "Ver vaga: " + vaga.titulo + ", " + vaga.empresa + " (abre em nova aba)");
+      ver.setAttribute("aria-label", (candidatura ? "Ver novamente: " : "Ver vaga: ") + vaga.titulo + ", " + vaga.empresa + " (abre em nova aba)");
       acoes.appendChild(ver);
       const preparar = criar("button", "botao-link", "Preparar candidatura");
       preparar.type = "button";
@@ -260,15 +391,30 @@ function criarCartao(vaga, combina, avisarSemModalidade) {
       preparar.addEventListener("click", function () { abrirJanelaCandidatura(vaga); });
       acoes.appendChild(preparar);
     } else {
-      const candidatar = criar("button", "botao botao-primario", "Candidatar-se");
+      const candidatar = criar("button", "botao botao-primario", candidatura ? "Ver novamente" : "Candidatar-se");
       candidatar.type = "button";
       candidatar.setAttribute("aria-haspopup", "dialog");
-      candidatar.setAttribute("aria-label", "Candidatar-se: " + vaga.titulo + ", " + vaga.empresa);
+      candidatar.setAttribute("aria-label", (candidatura ? "Ver novamente: " : "Candidatar-se: ") + vaga.titulo + ", " + vaga.empresa);
       candidatar.addEventListener("click", function () { abrirJanelaCandidatura(vaga); });
       acoes.appendChild(candidatar);
     }
     cartao.appendChild(acoes);
   }
+
+  // Botão-check "Já me candidatei" (vale em todos os cartões; desmarcar não pede confirmação)
+  const check = criar("button", "check-candidatura", "Já me candidatei");
+  check.type = "button";
+  check.dataset.chave = chaveDaVaga(vaga);
+  check.setAttribute("aria-pressed", candidatura ? "true" : "false");
+  check.setAttribute("aria-label", "Já me candidatei: " + vaga.titulo + ", " + vaga.empresa);
+  check.addEventListener("click", function () {
+    if (candidaturaDaVaga(perfil.candidaturas, vaga) !== null) {
+      desmarcarCandidatura(chaveDaVaga(vaga), false);
+    } else {
+      marcarCandidatura(vaga, false);
+    }
+  });
+  cartao.appendChild(check);
   return cartao;
 }
 
@@ -293,7 +439,9 @@ function lerFiltrosPagina() {
     modalidade: selectModalidade.value,
     tipo: selectTipo.value,
     fonte: selectFonte.value,
-    palavras: campoPalavras.value
+    palavras: campoPalavras.value,
+    situacao: situacao,
+    candidatadas: chavesMarcadas()
   };
 }
 
@@ -337,6 +485,20 @@ function mostrarChips(filtros) {
     li.appendChild(botao);
     listaChips.appendChild(li);
   });
+  // "Mostrar: Pendentes/Candidatadas" também é uma etiqueta removível (volta para "Todas")
+  if (situacao !== "todas") {
+    const li = document.createElement("li");
+    const rotulo = "Mostrar: " + (situacao === "pendentes" ? "Pendentes" : "Candidatadas");
+    const botao = criar("button", "chip");
+    botao.type = "button";
+    botao.setAttribute("aria-label", "Remover filtro " + rotulo);
+    botao.appendChild(document.createTextNode(rotulo));
+    botao.appendChild(criar("span", "chip-x", "×"));
+    botao.lastChild.setAttribute("aria-hidden", "true");
+    botao.addEventListener("click", function () { escolherSituacao("todas"); });
+    li.appendChild(botao);
+    listaChips.appendChild(li);
+  }
   // Filtro do perfil: uma etiqueta que desliga (ou volta a ligar) sem apagar o perfil
   if (perfilTemFiltro(perfil)) {
     const li = document.createElement("li");
@@ -361,10 +523,19 @@ function mostrarChips(filtros) {
 }
 
 // "Limpar tudo": limpa busca e filtros e mostra todas as vagas (o perfil não é apagado)
+// "Mostrar: Todas | Pendentes | Candidatadas": guarda a escolha (se o navegador deixar) e redesenha
+function escolherSituacao(valor) {
+  situacao = normalizarSituacao(valor);
+  salvarSituacao(armazenamento, situacao);
+  mostrarVagas();
+}
+
 function limparTudo() {
   [campoBusca, selectCategoria, selectCidade, selectModalidade, selectTipo, selectFonte, campoPalavras].forEach(function (controle) {
     controle.value = "";
   });
+  situacao = "todas";
+  salvarSituacao(armazenamento, situacao);
   if (perfilTemFiltro(perfil)) {
     filtroPerfilPausado = true;
   }
@@ -376,7 +547,16 @@ function limparTudo() {
 function mostrarVagas() {
   const filtros = lerFiltrosPagina();
   const perfilFiltrando = filtroPerfilLigado();
-  const filtradas = filtrarVagas(vagasAtivas, filtros, perfil, perfilFiltrando);
+  // 1) tudo menos "Mostrar" (para as contagens); 2) "Mostrar" (Todas, Pendentes ou Candidatadas)
+  const semSituacao = filtrarVagas(vagasAtivas, Object.assign({}, filtros, { situacao: "" }), perfil, perfilFiltrando);
+  const contagens = contarSituacoes(semSituacao, filtros.candidatadas);
+  const filtradas = semSituacao.filter(function (vaga) { return passaFiltroSituacao(vaga, situacao, filtros.candidatadas); });
+  botoesSituacao.forEach(function (botao) {
+    const valor = botao.dataset.situacao;
+    const nomes = { todas: "Todas", pendentes: "Pendentes", candidatadas: "Candidatadas" };
+    botao.textContent = nomes[valor] + " (" + contagens[valor] + ")";
+    botao.setAttribute("aria-pressed", valor === situacao ? "true" : "false");
+  });
 
   // Ordem escolhida (relevância, mais recentes ou prazo). A pontuação do perfil ordena o que sobrou.
   const ordenadas = ordenarVagas(filtradas, modoOrdem, perfil);
@@ -385,7 +565,7 @@ function mostrarVagas() {
   ordenadas.forEach(function (vaga) {
     // "Modalidade não informada" aparece quando algum filtro de modalidade está em ação (da página ou do perfil)
     const avisarSemModalidade = filtros.modalidade !== "" || (perfilFiltrando && perfil.modalidades.length > 0);
-    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil), avisarSemModalidade));
+    listaVagas.appendChild(criarCartao(vaga, combinaComPerfil(vaga, perfil), avisarSemModalidade, candidaturaDaVaga(perfil.candidaturas, vaga)));
   });
 
   // Mensagem de lista vazia (cada causa tem a sua)
@@ -394,6 +574,10 @@ function mostrarVagas() {
   if (vagasAtivas.length === 0) {
     textoVazio.textContent = "Ainda não há vagas abertas cadastradas. Volte em breve!";
     botaoLimparFiltros.hidden = true;
+  } else if (situacao === "candidatadas" && contagens.candidatadas === 0) {
+    textoVazio.textContent = "Você ainda não marcou nenhuma candidatura. Use \"Já me candidatei\" nos cartões das vagas.";
+  } else if (situacao === "pendentes" && contagens.pendentes === 0) {
+    textoVazio.textContent = "Você já marcou todas as vagas desta lista como candidatadas.";
   } else if (perfilFiltrando) {
     textoVazio.textContent = "Mude o que está marcado em Meu perfil ou limpe os filtros para ver todas as vagas.";
   } else {
@@ -409,7 +593,7 @@ function mostrarVagas() {
 
 // Abre o painel (opcionalmente já na aba "curriculo" ou "busco")
 function abrirPerfil(aba) {
-  selecionarAba(aba === "curriculo" ? 1 : 0, false);
+  selecionarAba(aba === "curriculo" ? 1 : (aba === "candidaturas" ? 2 : 0), false);
   if (typeof painelPerfil.showModal === "function") {
     if (!painelPerfil.open) {
       painelPerfil.showModal();
@@ -516,6 +700,7 @@ function lerPerfilDaTela() {
   novo.nome = caixaNome.value;
   novo.palavras = caixaPalavras.value;
   novo.curriculo = caixaCurriculo.value;
+  novo.candidaturas = perfil.candidaturas;   // as candidaturas marcadas não vêm da tela: ficam como estão
   return sanitizarPerfil(novo);
 }
 
@@ -615,14 +800,17 @@ function importarPerfil(arquivo) {
       mostrarMensagemPerfil("Não importei: " + resultado.erro, true);
       return;
     }
-    perfil = resultado.perfil;
+    // as candidaturas do arquivo são somadas às atuais (por chave, ficando com a mais antiga)
+    const somadas = mesclarCandidaturas(perfil.candidaturas, resultado.perfil.candidaturas);
+    perfil = Object.assign({}, resultado.perfil, { candidaturas: somadas });
     filtroPerfilPausado = false;
     avisoPerfil.hidden = salvarPerfil(armazenamento, perfil);
     montarPainelPerfil();
     mostrarEstadoPerfil();
     mostrarSaudacao();
     mostrarVagas();
-    mostrarMensagemPerfil("Perfil importado.", false);
+    mostrarCandidaturasDoPerfil();
+    mostrarMensagemPerfil("Perfil importado." + (somadas.length > 0 ? " Candidaturas marcadas: " + somadas.length + "." : ""), false);
   };
   leitor.readAsText(arquivo);
 }
@@ -792,7 +980,10 @@ function limparPerfil() {
   detalhesManual.open = false;
   mostrarContadorCurriculo();
   filtroPerfilPausado = false;
-  perfil = novoPerfil();
+  perfil = novoPerfil();   // inclui as candidaturas marcadas (lista vazia)
+  situacao = "todas";
+  try { armazenamento.removeItem(CHAVE_SITUACAO); } catch (erro) { /* sem armazenamento: nada a apagar */ }
+  esconderToast();
   const apagou = apagarPerfil(armazenamento);
   avisoPerfil.hidden = apagou;
   mostrarMensagemPerfil(apagou ? "Perfil e currículo apagados deste navegador." : "Perfil e currículo limpos nesta página.", false);
@@ -809,6 +1000,7 @@ function limparPerfil() {
   mostrarEstadoPerfil();
   mostrarSaudacao();
   mostrarVagas();
+  mostrarCandidaturasDoPerfil();
 }
 
 // ===== Ligações (eventos) =====
@@ -816,6 +1008,16 @@ function limparPerfil() {
 [campoBusca, campoPalavras].forEach(function (campo) { campo.addEventListener("input", mostrarVagas); });
 [selectCategoria, selectCidade, selectModalidade, selectTipo, selectFonte].forEach(function (select) {
   select.addEventListener("change", mostrarVagas);
+});
+botoesSituacao.forEach(function (botao) {
+  botao.addEventListener("click", function () { escolherSituacao(botao.dataset.situacao); });
+});
+toastDesfazer.addEventListener("click", function () {
+  const acao = desfazerAtual;
+  esconderToast();
+  if (acao !== null) {
+    acao();
+  }
 });
 botaoMaisFiltros.addEventListener("click", function () {
   const abrir = blocoMaisFiltros.hidden;
@@ -875,5 +1077,6 @@ mostrarSaudacao();
 avisoPerfil.hidden = armazenamento !== null;  // sem localStorage, avisa já na entrada
 mostrarEstadoPerfil();
 mostrarVagas();
+mostrarCandidaturasDoPerfil();
 iniciarCandidatura();       // js/candidatura.js: liga a janela de candidatura em passos
 carregarArquivoGuardado();  // traz de volta o arquivo anexado em visitas anteriores
