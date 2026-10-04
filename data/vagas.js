@@ -369,4 +369,14 @@ const vagas = [
     link: "https://www.linkedin.com/jobs/view/4466419671",
     dataPublicacao: "2026-10-03"
   },
+  {
+    titulo: "Estágio ou Trainee em Equity Research",
+    empresa: "RXZ Investimentos",
+    area: "Equity Research",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://vagas.rxzinvest.com.br/aplicar/research-2026",
+    dataPublicacao: "2026-10-02"
+  },
 ];
