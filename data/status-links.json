@@ -155,10 +155,10 @@
   },
   "https://www.linkedin.com/jobs/view/4471782487": {
     "ultimaChecagem": "2026-10-04",
-    "ultimoResultado": "ok",
-    "motivo": "HTTP 200",
-    "falhasConsecutivas": 0,
-    "ultimaFalhaEm": null
+    "ultimoResultado": "falha",
+    "motivo": "a página contém \"encerrad\"",
+    "falhasConsecutivas": 1,
+    "ultimaFalhaEm": "2026-10-04"
   },
   "https://www.linkedin.com/jobs/view/4473392575": {
     "ultimaChecagem": "2026-10-04",
