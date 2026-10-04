@@ -127,9 +127,9 @@ function modalidadeDaVaga(vaga) {
 const CATEGORIA_OUTRAS = "Outras";
 const CATEGORIAS_AREA = [
   { nome: "Investimentos e Gestão", termos: ["asset management", "investimentos", "fund management", "special situations", "venture capital", "private equity", "real estate", "infraestrutura"] },
-  { nome: "Banco de Investimento e M&A", termos: ["m&a", "investment banking", "dcm", "project finance", "capital solutions", "securitizacao", "renda fixa"] },
+  { nome: "Banco de Investimento e M&A", termos: ["m&a", "investment banking", "dcm", "project finance", "capital solutions", "securitizacao", "renda fixa", "mercado de capitais"] },
   { nome: "Risco e Crédito", termos: ["risco", "credito", "controle e risco", "cobranca"] },
-  { nome: "Operações e Backoffice", termos: ["operacoes", "operations", "backoffice", "middle office", "mesa de operacoes"] },
+  { nome: "Operações e Backoffice", termos: ["operacoes", "operations", "backoffice", "middle office", "mesa de operacoes", "tesouraria"] },
   { nome: "Research", termos: ["equity research", "equities", "research"] },
   { nome: "Comercial e Wealth", termos: ["comercial", "wealth", "multi-family office", "multi family office"] }
 ];

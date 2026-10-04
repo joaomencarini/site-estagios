@@ -47,7 +47,7 @@ test("'Diversas', 'Diversas Áreas' e 'Diversas (...)' são 'várias áreas', se
 });
 
 test("área desconhecida, vazia ou estranha cai em 'Outras'", () => {
-  for (const a of ["Tesouraria", "Mercado de Capitais", "Tecnologia", "", "   ", null, undefined, 5]) {
+  for (const a of ["Tecnologia", "Suporte à Diretoria e Operacional", "", "   ", null, undefined, 5]) {
     assert.deepStrictEqual(R.classificarArea(a), { categoria: "Outras", varias: false }, String(a));
   }
 });
@@ -59,7 +59,7 @@ test("as áreas atuais das vagas (01/10/2026) e onde caem", () => {
     "Risco": RC, "Crédito": RC,
     "Operações": OPS, "Middle Office": OPS,
     "Research": "Research",
-    "Tesouraria": "Outras", "Mercado de Capitais": "Outras",
+    "Tesouraria": OPS, "Mercado de Capitais": BIM,
   };
   for (const [area, categoria] of Object.entries(esperado)) assert.strictEqual(R.classificarArea(area).categoria, categoria, area);
   assert.strictEqual(R.classificarArea("Diversas").varias, true);
@@ -67,7 +67,7 @@ test("as áreas atuais das vagas (01/10/2026) e onde caem", () => {
 });
 
 test("categoriasDasVagas: só as que existem, na ordem do mapa, sem as 'Diversas'", () => {
-  const lista = [vaga({ area: "Tesouraria" }), vaga({ area: "Diversas" }), vaga({ area: "M&A" }), vaga({ area: "Crédito" }), vaga({ area: "Risco" })];
+  const lista = [vaga({ area: "Tecnologia" }), vaga({ area: "Diversas" }), vaga({ area: "M&A" }), vaga({ area: "Crédito" }), vaga({ area: "Risco" })];
   assert.deepStrictEqual(R.categoriasDasVagas(lista), [BIM, RC, "Outras"]);
   assert.deepStrictEqual(R.categoriasDasVagas([vaga({ area: "Diversas" })]), []);
   assert.deepStrictEqual(R.categoriasDasVagas([]), []);
@@ -91,7 +91,7 @@ test("categorias do perfil: só nomes que existem, nome oficial, sem repetir", (
 });
 
 test("perfil antigo (guardava áreas cruas): vira categorias; 'Diversas' e desconhecidas não viram categoria útil", () => {
-  const p = R.sanitizarPerfil({ areas: ["Risco", "Crédito", "Diversas", "Asset Management", "Tesouraria"], cidades: ["São Paulo"] });
+  const p = R.sanitizarPerfil({ areas: ["Risco", "Crédito", "Diversas", "Asset Management", "Tecnologia"], cidades: ["São Paulo"] });
   assert.deepStrictEqual(p.categorias, [RC, INV, "Outras"]);
   assert.deepStrictEqual(p.cidades, ["São Paulo"]);
   assert.strictEqual("areas" in p, false);
@@ -210,7 +210,7 @@ const catalogo = () => [
   vaga({ titulo: "ma-sp-banco", area: "M&A", cidade: "São Paulo", tipoEmpresa: "Banco", modalidade: "presencial" }),
   vaga({ titulo: "diversas-sp-corretora", area: "Diversas (Investment Banking, Research, Risco, Asset)", cidade: "São Paulo", tipoEmpresa: "Corretora" }),
   vaga({ titulo: "diversas-rj-banco", area: "Diversas", cidade: "Rio de Janeiro", tipoEmpresa: "Banco", modalidade: "hibrido" }),
-  vaga({ titulo: "tesouraria-sp-outro", area: "Tesouraria", cidade: "São Paulo", tipoEmpresa: "Outro" }),
+  vaga({ titulo: "tesouraria-sp-outro", area: "Tecnologia", cidade: "São Paulo", tipoEmpresa: "Outro" }),
   vaga({ titulo: "ops-bh-gestora", area: "Operações", cidade: "Belo Horizonte", tipoEmpresa: "Gestora", modalidade: "hibrido" }),
 ];
 const passam = (p, lista = catalogo()) => titulos(R.filtrarVagas(lista, {}, p, true));
@@ -1255,4 +1255,65 @@ test("filtro Mostrar: lembrar a escolha no localStorage (com try/catch)", () => 
   const bloqueado = { getItem() { throw new Error("bloqueado"); }, setItem() { throw new Error("bloqueado"); } };
   assert.strictEqual(R.lerSituacao(bloqueado), "todas");
   assert.strictEqual(R.salvarSituacao(bloqueado, "candidatadas"), false);
+});
+
+// ---------------- dados reais (data/vagas.js e data/vagas-auto.js) ----------------
+// Não dependem de contagem fixa nem da data de hoje: só conferem que cada vaga tem dados válidos.
+test("dados reais: campos obrigatórios, tipo válido, link, e-mails e datas válidos, sem duplicatas", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const vm = require("node:vm");
+  const ler = (arquivo, nome) => {
+    const contexto = {};
+    vm.createContext(contexto);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, "..", "data", arquivo), "utf8") + ";this.lista=" + nome, contexto);
+    return contexto.lista;
+  };
+  const manuais = ler("vagas.js", "vagas");
+  const automaticas = ler("vagas-auto.js", "vagasAuto");
+  assert.ok(Array.isArray(manuais) && Array.isArray(automaticas));
+  const TIPOS = ["Banco", "Corretora", "Gestora", "Fintech", "Consultoria", "Seguradora", "Outro"];
+  const erros = [];
+  const conferir = (lista, arquivo) => {
+    const chaves = {};
+    const empresaTitulo = {};
+    lista.forEach((v) => {
+      const id = arquivo + ": " + v.empresa + " | " + v.titulo;
+      ["titulo", "empresa", "area", "cidade", "tipoEmpresa", "fonte", "dataPublicacao"].forEach((campo) => {
+        if (typeof v[campo] !== "string" || v[campo].trim() === "") erros.push(id + " — campo vazio: " + campo);
+      });
+      if (!TIPOS.includes(v.tipoEmpresa)) erros.push(id + " — Tipo fora da lista: " + v.tipoEmpresa);
+      if (v.link !== undefined && !/^https?:\/\/\S+$/.test(v.link)) erros.push(id + " — link inválido");
+      if (v.emailCandidatura !== undefined) {
+        const emails = Array.isArray(v.emailCandidatura) ? v.emailCandidatura : [v.emailCandidatura];
+        emails.forEach((e) => { if (!R.emailValido(e)) erros.push(id + " — e-mail inválido: " + e); });
+        if (R.emailsValidos(v.emailCandidatura).length !== emails.length) erros.push(id + " — e-mail repetido");
+      }
+      if (v.assuntoEmail !== undefined && R.emailsValidos(v.emailCandidatura).length === 0) erros.push(id + " — assuntoEmail sem e-mail");
+      if (!R.dataIsoValida(v.dataPublicacao)) erros.push(id + " — data de publicação inválida");
+      if (v.prazoInscricao !== undefined && !R.dataIsoValida(v.prazoInscricao)) erros.push(id + " — prazo inválido");
+      if (v.prazoInscricao !== undefined && R.dataIsoValida(v.prazoInscricao) && R.dataIsoValida(v.dataPublicacao) && v.prazoInscricao < v.dataPublicacao) erros.push(id + " — prazo antes da publicação");
+      if (v.modalidade !== undefined && R.modalidadePadrao(v.modalidade) === "") erros.push(id + " — modalidade desconhecida");
+      const chave = R.chaveDaVaga(v);
+      if (chave === "") erros.push(id + " — sem chave");
+      if (chaves[chave]) erros.push(id + " — repetida (mesma chave)"); else chaves[chave] = true;
+      const par = R.normalizarTexto(v.empresa) + "|" + R.normalizarTexto(v.titulo);
+      if (empresaTitulo[par]) erros.push(id + " — mesma empresa e título"); else empresaTitulo[par] = true;
+    });
+  };
+  conferir(manuais, "vagas.js");
+  conferir(automaticas, "vagas-auto.js");
+  // vagas MANUAIS precisam de uma forma de candidatura (link ou e-mail válido)
+  manuais.forEach((v) => { if (R.tipoCandidatura(v) === "") erros.push("vagas.js: " + v.empresa + " | " + v.titulo + " — sem link e sem e-mail válido"); });
+  assert.deepStrictEqual(erros, []);
+});
+
+test("categorias: mercado de capitais e tesouraria", () => {
+  const cat = (area) => R.classificarArea(area).categoria;
+  assert.strictEqual(cat("Mercado de Capitais"), BIM);
+  assert.strictEqual(cat("MERCADO DE CAPITAIS"), BIM);
+  assert.strictEqual(cat("Tesouraria"), OPS);
+  assert.strictEqual(cat("Tesouraria e Mesa"), OPS);
+  assert.strictEqual(cat("Suporte à Diretoria e Operacional"), "Outras");   // continua em "Outras" de propósito
+  assert.strictEqual(cat("Investimentos"), INV);                              // as regras antigas não mudaram
 });

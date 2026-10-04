@@ -97,9 +97,9 @@ As áreas das vagas são muito variadas. Em `js/regras.js` (`CATEGORIAS_AREA`) c
 | Categoria | Termos (a área contém) |
 |---|---|
 | Investimentos e Gestão | asset management, investimentos, fund management, special situations, venture capital, private equity, real estate, infraestrutura |
-| Banco de Investimento e M&A | m&a, investment banking, dcm, project finance, capital solutions, securitização, renda fixa |
+| Banco de Investimento e M&A | m&a, investment banking, dcm, project finance, capital solutions, securitização, renda fixa, mercado de capitais |
 | Risco e Crédito | risco, crédito, controle e risco, cobrança |
-| Operações e Backoffice | operações, operations, backoffice, middle office, mesa de operações |
+| Operações e Backoffice | operações, operations, backoffice, middle office, mesa de operações, tesouraria |
 | Research | equity research, equities, research |
 | Comercial e Wealth | comercial, wealth, multi-family office, multi family office |
 | Outras | (tudo o que não casou acima) |
@@ -108,7 +108,7 @@ As áreas das vagas são muito variadas. Em `js/regras.js` (`CATEGORIAS_AREA`) c
 
 - **"Diversas":** área que **começa** com "Diversas" ("Diversas", "Diversas Áreas", "Diversas (Investment Banking, Research, ...)") **não tem categoria** e conta como compatível com **qualquer** categoria marcada no filtro. O cartão mostra o selo **"Várias áreas"**. Ela passa no filtro de categoria, mas **não ganha os +3** da pontuação (ver abaixo).
 - **Como adicionar uma regra nova:** abra `js/regras.js`, ache `CATEGORIAS_AREA` e acrescente o termo (em minúsculas, pode ter acento) na lista `termos` da categoria certa; ou crie um bloco novo `{ nome: "...", termos: [...] }` (a ordem do bloco importa: a primeira categoria que casar vence). Depois acrescente um caso em `testes/regras.test.js` e rode `node --test`. Não é preciso mexer em `data/`. A tabela acima deve ser atualizada junto.
-- **Mapa hoje com as áreas reais (01/10/2026):** Investimentos e Gestão = Investimentos, Asset Management, Special Situations, Infraestrutura; Banco de Investimento e M&A = Investment Banking, M&A, DCM, Project Finance, Capital Solutions; Risco e Crédito = Risco, Crédito; Operações e Backoffice = Operações, Middle Office; Research = Research; Várias áreas = "Diversas" e "Diversas (Investment Banking, Research, Risco, Asset)"; **Outras = Tesouraria e Mercado de Capitais** (candidatas a ganhar regra: ex. "tesouraria" e "mercado de capitais").
+- **Mapa hoje com as áreas reais (01/10/2026):** Investimentos e Gestão = Investimentos, Asset Management, Special Situations, Infraestrutura; Banco de Investimento e M&A = Investment Banking, M&A, DCM, Project Finance, Capital Solutions; Risco e Crédito = Risco, Crédito; Operações e Backoffice = Operações, Middle Office; Research = Research; Várias áreas = "Diversas" e "Diversas (Investment Banking, Research, Risco, Asset)"; Tesouraria entra em Operações e Backoffice e Mercado de Capitais em Banco de Investimento e M&A; **Outras = "Suporte à Diretoria e Operacional"** (vaga administrativa, de propósito).
 
 ## Personalização por interesses ("Meu perfil")
 O **Meu perfil** é um painel aberto pelo botão "Meu perfil" no cabeçalho (painel lateral à direita no desktop, tela cheia no celular; é um `<dialog>`: Esc fecha, foco preso, rótulo acessível). Tem **três abas** (setas, Home e End trocam de aba): **"O que busco"** (nome, áreas, cidades, tipos, modalidade, palavras-chave), **"Meu currículo"** e **"Candidaturas"** (lista das vagas marcadas com "Já me candidatei"). Fica uma linha fixa: "Seu perfil e currículo ficam só neste navegador." Deixa o usuário dizer o que procura: a lista **filtra** pelo que foi marcado e mostra primeiro as vagas mais relevantes. É feito só no navegador: **sem login, sem backend, nada é enviado a servidor e nada é coletado** (há uma linha dizendo isso no rodapé, inclusive sobre o nome). Não envie, registre nem cole esses dados em lugar nenhum.
