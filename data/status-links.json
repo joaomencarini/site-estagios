@@ -153,20 +153,6 @@
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
-  "https://www.linkedin.com/jobs/view/4471782487": {
-    "ultimaChecagem": "2026-10-04",
-    "ultimoResultado": "falha",
-    "motivo": "a página contém \"encerrad\"",
-    "falhasConsecutivas": 1,
-    "ultimaFalhaEm": "2026-10-04"
-  },
-  "https://www.linkedin.com/jobs/view/4473392575": {
-    "ultimaChecagem": "2026-10-04",
-    "ultimoResultado": "falha",
-    "motivo": "a página contém \"encerrad\"",
-    "falhasConsecutivas": 1,
-    "ultimaFalhaEm": "2026-10-04"
-  },
   "https://www.portalsinergyrh.com.br/Portal/MeuPortal/MeuPortal?empresa=1600&master=0": {
     "ultimaChecagem": "2026-10-04",
     "ultimoResultado": "ok",
