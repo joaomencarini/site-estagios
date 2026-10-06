@@ -359,4 +359,41 @@ const vagas = [
     link: "https://vagas.rxzinvest.com.br/aplicar/research-2026",
     dataPublicacao: "2026-10-02"
   },
+  {
+    titulo: "Estágio em Comercial",
+    empresa: "Bradesco",
+    area: "Comercial",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: [
+      "gabriel.faria@bradesco.com.br",
+      "marcela.lafer@bradesco.com.br"
+    ],
+    assuntoEmail: "(Vaga de Estágio - \"Nome do Candidato\")",
+    dataPublicacao: "2026-10-05",
+    prazoInscricao: "2026-10-20"
+  },
+  {
+    titulo: "Estágio em Middle Office",
+    empresa: "Vision",
+    area: "Middle Office",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://vagas.visionbrazil.com/portal",
+    dataPublicacao: "2026-10-05"
+  },
+  {
+    titulo: "Estágio em M&A",
+    empresa: "Focal Capital",
+    area: "M&A",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    emailCandidatura: "rh@focalcp.com.br",
+    assuntoEmail: "Estágio FCP 2027.1 - (Nome Completo)",
+    dataPublicacao: "2026-10-05",
+    prazoInscricao: "2026-10-31"
+  },
 ];
