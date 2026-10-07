@@ -396,4 +396,15 @@ const vagas = [
     dataPublicacao: "2026-10-05",
     prazoInscricao: "2026-10-31"
   },
+  {
+    titulo: "Estágio em Middle Office",
+    empresa: "WHG",
+    area: "Middle Office",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    emailCandidatura: "whg.vagas@whg.com.br",
+    assuntoEmail: "Vaga de estágio WHG",
+    dataPublicacao: "2026-10-06"
+  },
 ];
