@@ -407,4 +407,138 @@ const vagas = [
     assuntoEmail: "Vaga de estágio WHG",
     dataPublicacao: "2026-10-06"
   },
+  {
+    titulo: "Estágio em Crédito",
+    empresa: "Itaú BBA",
+    area: "Crédito",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3710.html",
+    emailCandidatura: [
+      "gustavo.goncalves-sales@itau-Unibanco.com.br",
+      "rebeca.sato@itaubba.com"
+    ],
+    assuntoEmail: "Estágio Crédito",
+    dataPublicacao: "2026-10-14",
+    prazoInscricao: "2026-10-23"
+  },
+  {
+    titulo: "Estágio em M&A, Reestruturação e Crédito Estruturado",
+    empresa: "Guavira Capital",
+    area: "M&A, Reestruturação e Crédito Estruturado",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3703.html",
+    emailCandidatura: "rmoraes@guaviracapital.com",
+    assuntoEmail: "Estágio Guavira - Nome Completo",
+    dataPublicacao: "2026-10-09",
+    prazoInscricao: "2026-10-16"
+  },
+  {
+    titulo: "Estágio em Wealth Management",
+    empresa: "Journey Capital",
+    area: "Wealth Management",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3698.html",
+    emailCandidatura: "joao.silva@journeycapital.com.br",
+    assuntoEmail: "Estágio Wealth - Seu Nome",
+    dataPublicacao: "2026-10-07"
+  },
+  {
+    titulo: "Estágio em Crédito Privado",
+    empresa: "Porto Asset",
+    area: "Crédito Privado",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3702.html",
+    emailCandidatura: "credito.portoasset@portoseguro.com.br",
+    dataPublicacao: "2026-10-09"
+  },
+  {
+    titulo: "Estágio em M&A",
+    empresa: "Setter",
+    area: "M&A",
+    cidade: "São Paulo",
+    tipoEmpresa: "Consultoria",
+    fonte: "Polifinance",
+    emailCandidatura: "gabriel.estevam@setter.net.br",
+    dataPublicacao: "2026-10-07"
+  },
+  {
+    titulo: "Estágio em Private Equity",
+    empresa: "Advent International",
+    area: "Private Equity",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    link: "https://forms.gle/omqs1UFYH1VwVpxQ9",
+    dataPublicacao: "2026-10-08",
+    prazoInscricao: "2026-10-21"
+  },
+  {
+    titulo: "Estágio em Gestão",
+    empresa: "Exa Capital",
+    area: "Gestão",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3706.html",
+    emailCandidatura: "thiago.furnielis@exacapital.com.br",
+    assuntoEmail: "Vaga Estágio em Gestão - Nome do Candidato",
+    dataPublicacao: "2026-10-09",
+    prazoInscricao: "2026-10-16"
+  },
+  {
+    titulo: "Estágio em Advisory",
+    empresa: "Novara Advisory",
+    area: "Advisory",
+    cidade: "São Paulo",
+    tipoEmpresa: "Consultoria",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3701.html",
+    emailCandidatura: "contato@novara-advisory.com",
+    dataPublicacao: "2026-10-08"
+  },
+  {
+    titulo: "Estágio em Análise Quantitativa",
+    empresa: "Encore Asset Management",
+    area: "Análise Quantitativa",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3707.html",
+    emailCandidatura: "vagas@encore.am",
+    assuntoEmail: "Estágio - Vaga Quant",
+    dataPublicacao: "2026-10-13",
+    prazoInscricao: "2026-10-23"
+  },
+  {
+    titulo: "Estágio em Operações",
+    empresa: "Citrino",
+    area: "Operações",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3712.html",
+    emailCandidatura: "rh@citrinogestao.com.br",
+    assuntoEmail: "CV - Operações",
+    dataPublicacao: "2026-10-15"
+  },
+  {
+    titulo: "Estágio em Equities",
+    empresa: "Aberdeen Investments",
+    area: "Equities",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://mailing-polifinance.github.io/banner3697.html",
+    emailCandidatura: "vagas@aberdeenplc.com",
+    dataPublicacao: "2026-10-07",
+    prazoInscricao: "2026-10-30"
+  },
 ];
