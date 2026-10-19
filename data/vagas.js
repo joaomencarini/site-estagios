@@ -27,17 +27,6 @@
 // ============================================================
 const vagas = [
   {
-    titulo: "Programa de Estágio XTAG 2027",
-    empresa: "XP Inc.",
-    area: "Diversas (Investment Banking, Research, Risco, Asset)",
-    cidade: "São Paulo",
-    tipoEmpresa: "Corretora",
-    fonte: "Site da empresa",
-    link: "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8805413002",
-    dataPublicacao: "2026-10-01",
-    prazoInscricao: "2026-10-13"
-  },
-  {
     titulo: "Programa de Estágio 2027",
     empresa: "Banco ABC Brasil",
     area: "Mercado de Capitais",
@@ -68,27 +57,6 @@ const vagas = [
     link: "https://vagas.artica.capital/",
     dataPublicacao: "2026-09-29",
     prazoInscricao: "2026-10-23"
-  },
-  {
-    titulo: "Estágio em Investment Banking",
-    empresa: "Banco Safra",
-    area: "Investment Banking",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    link: "https://mailing-polifinance.github.io/banner3664.html",
-    dataPublicacao: "2026-09-29",
-    prazoInscricao: "2026-10-02"
-  },
-  {
-    titulo: "Estágio ou Estágio de Férias em DCM",
-    empresa: "BR Partners",
-    area: "DCM",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    link: "https://www.portalsinergyrh.com.br/Portal/MeuPortal/MeuPortal?empresa=1600&master=0",
-    dataPublicacao: "2026-09-29"
   },
   {
     titulo: "Estágio em Asset Management",
@@ -314,32 +282,6 @@ const vagas = [
     dataPublicacao: "2026-10-02"
   },
   {
-    titulo: "Estágio em Securitização & Renda Fixa",
-    empresa: "VERT Capital",
-    area: "Securitização & Renda Fixa",
-    cidade: "São Paulo",
-    tipoEmpresa: "Outro",
-    fonte: "Polifinance",
-    link: "https://vert-capital.gupy.io/jobs/11548820",
-    dataPublicacao: "2026-10-02",
-    prazoInscricao: "2026-10-07"
-  },
-  {
-    titulo: "Estágio em Multi Family Office",
-    empresa: "Bradesco",
-    area: "Multi Family Office",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    emailCandidatura: [
-      "gustavo.castro@bradesco.com.br",
-      "pedro.p.rodrigues@bradesco.com.br"
-    ],
-    assuntoEmail: "Estágio Consolidação - (Nome do Candidato)",
-    dataPublicacao: "2026-10-02",
-    prazoInscricao: "2026-10-15"
-  },
-  {
     titulo: "Estágio em Suporte à Diretoria e Operacional",
     empresa: "BTG Pactual",
     area: "Suporte à Diretoria e Operacional",
@@ -373,16 +315,6 @@ const vagas = [
     assuntoEmail: "(Vaga de Estágio - \"Nome do Candidato\")",
     dataPublicacao: "2026-10-05",
     prazoInscricao: "2026-10-20"
-  },
-  {
-    titulo: "Estágio em Middle Office",
-    empresa: "Vision",
-    area: "Middle Office",
-    cidade: "São Paulo",
-    tipoEmpresa: "Gestora",
-    fonte: "Polifinance",
-    link: "https://vagas.visionbrazil.com/portal",
-    dataPublicacao: "2026-10-05"
   },
   {
     titulo: "Estágio em M&A",
@@ -422,19 +354,6 @@ const vagas = [
     assuntoEmail: "Estágio Crédito",
     dataPublicacao: "2026-10-14",
     prazoInscricao: "2026-10-23"
-  },
-  {
-    titulo: "Estágio em M&A, Reestruturação e Crédito Estruturado",
-    empresa: "Guavira Capital",
-    area: "M&A, Reestruturação e Crédito Estruturado",
-    cidade: "São Paulo",
-    tipoEmpresa: "Outro",
-    fonte: "Polifinance",
-    link: "https://mailing-polifinance.github.io/banner3703.html",
-    emailCandidatura: "rmoraes@guaviracapital.com",
-    assuntoEmail: "Estágio Guavira - Nome Completo",
-    dataPublicacao: "2026-10-09",
-    prazoInscricao: "2026-10-16"
   },
   {
     titulo: "Estágio em Wealth Management",
@@ -479,19 +398,6 @@ const vagas = [
     link: "https://forms.gle/omqs1UFYH1VwVpxQ9",
     dataPublicacao: "2026-10-08",
     prazoInscricao: "2026-10-21"
-  },
-  {
-    titulo: "Estágio em Gestão",
-    empresa: "Exa Capital",
-    area: "Gestão",
-    cidade: "São Paulo",
-    tipoEmpresa: "Gestora",
-    fonte: "Polifinance",
-    link: "https://mailing-polifinance.github.io/banner3706.html",
-    emailCandidatura: "thiago.furnielis@exacapital.com.br",
-    assuntoEmail: "Vaga Estágio em Gestão - Nome do Candidato",
-    dataPublicacao: "2026-10-09",
-    prazoInscricao: "2026-10-16"
   },
   {
     titulo: "Estágio em Advisory",
