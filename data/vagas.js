@@ -447,4 +447,39 @@ const vagas = [
     dataPublicacao: "2026-10-07",
     prazoInscricao: "2026-10-30"
   },
+  {
+    titulo: "Controles & Risco",
+    empresa: "Riza Asset",
+    area: "Controles & Risco",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://rizaasset.com/nossos-talentos#a2gU6000005M3yrIAC",
+    dataPublicacao: "2026-10-21"
+  },
+  {
+    titulo: "Asset Management",
+    empresa: "GHT4 Asset",
+    area: "Asset Management",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    emailCandidatura: "rh@ght4.com",
+    dataPublicacao: "2026-10-21"
+  },
+  {
+    titulo: "Crédito Estruturado",
+    empresa: "Grupo Sarfaty",
+    area: "Crédito",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    emailCandidatura: [
+      "roberto.melo@gruposarfaty.com.br",
+      "nissim.battat@gruposarfaty.com.br"
+    ],
+    assuntoEmail: "Vaga Estágio Crédito 2.2026 - (Seu Nome Completo)",
+    dataPublicacao: "2026-10-20",
+    prazoInscricao: "2026-11-10"
+  },
 ];
