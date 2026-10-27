@@ -48,17 +48,6 @@ const vagas = [
     prazoInscricao: "2026-11-01"
   },
   {
-    titulo: "Estágio em Capital Solutions",
-    empresa: "Ártica",
-    area: "Capital Solutions",
-    cidade: "São Paulo",
-    tipoEmpresa: "Outro",
-    fonte: "Polifinance",
-    link: "https://vagas.artica.capital/",
-    dataPublicacao: "2026-09-29",
-    prazoInscricao: "2026-10-23"
-  },
-  {
     titulo: "Estágio em Asset Management",
     empresa: "GCB Investimentos",
     area: "Asset Management",
@@ -243,23 +232,6 @@ const vagas = [
     dataPublicacao: "2026-10-01"
   },
   {
-    titulo: "Estágio em Investment Banking",
-    empresa: "Santander",
-    area: "Investment Banking",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    emailCandidatura: [
-      "lauren.wang@santander.com.br",
-      "jose.fachim@santander.com.br",
-      "eduardo.vescovi@santander.com.br",
-      "joao.skowronski@santander.com.br"
-    ],
-    assuntoEmail: "Investment Banking Internship - Full Name (University)",
-    dataPublicacao: "2026-10-01",
-    prazoInscricao: "2026-10-25"
-  },
-  {
     titulo: "Estágio em Fund Management",
     empresa: "BlueOak Investments",
     area: "Fund Management",
@@ -302,21 +274,6 @@ const vagas = [
     dataPublicacao: "2026-10-02"
   },
   {
-    titulo: "Estágio em Comercial",
-    empresa: "Bradesco",
-    area: "Comercial",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    emailCandidatura: [
-      "gabriel.faria@bradesco.com.br",
-      "marcela.lafer@bradesco.com.br"
-    ],
-    assuntoEmail: "(Vaga de Estágio - \"Nome do Candidato\")",
-    dataPublicacao: "2026-10-05",
-    prazoInscricao: "2026-10-20"
-  },
-  {
     titulo: "Estágio em M&A",
     empresa: "Focal Capital",
     area: "M&A",
@@ -338,22 +295,6 @@ const vagas = [
     emailCandidatura: "whg.vagas@whg.com.br",
     assuntoEmail: "Vaga de estágio WHG",
     dataPublicacao: "2026-10-06"
-  },
-  {
-    titulo: "Estágio em Crédito",
-    empresa: "Itaú BBA",
-    area: "Crédito",
-    cidade: "São Paulo",
-    tipoEmpresa: "Banco",
-    fonte: "Polifinance",
-    link: "https://mailing-polifinance.github.io/banner3710.html",
-    emailCandidatura: [
-      "gustavo.goncalves-sales@itau-Unibanco.com.br",
-      "rebeca.sato@itaubba.com"
-    ],
-    assuntoEmail: "Estágio Crédito",
-    dataPublicacao: "2026-10-14",
-    prazoInscricao: "2026-10-23"
   },
   {
     titulo: "Estágio em Wealth Management",
@@ -389,17 +330,6 @@ const vagas = [
     dataPublicacao: "2026-10-07"
   },
   {
-    titulo: "Estágio em Private Equity",
-    empresa: "Advent International",
-    area: "Private Equity",
-    cidade: "São Paulo",
-    tipoEmpresa: "Outro",
-    fonte: "Polifinance",
-    link: "https://forms.gle/omqs1UFYH1VwVpxQ9",
-    dataPublicacao: "2026-10-08",
-    prazoInscricao: "2026-10-21"
-  },
-  {
     titulo: "Estágio em Advisory",
     empresa: "Novara Advisory",
     area: "Advisory",
@@ -409,19 +339,6 @@ const vagas = [
     link: "https://mailing-polifinance.github.io/banner3701.html",
     emailCandidatura: "contato@novara-advisory.com",
     dataPublicacao: "2026-10-08"
-  },
-  {
-    titulo: "Estágio em Análise Quantitativa",
-    empresa: "Encore Asset Management",
-    area: "Análise Quantitativa",
-    cidade: "São Paulo",
-    tipoEmpresa: "Gestora",
-    fonte: "Polifinance",
-    link: "https://mailing-polifinance.github.io/banner3707.html",
-    emailCandidatura: "vagas@encore.am",
-    assuntoEmail: "Estágio - Vaga Quant",
-    dataPublicacao: "2026-10-13",
-    prazoInscricao: "2026-10-23"
   },
   {
     titulo: "Estágio em Operações",
@@ -481,5 +398,125 @@ const vagas = [
     assuntoEmail: "Vaga Estágio Crédito 2.2026 - (Seu Nome Completo)",
     dataPublicacao: "2026-10-20",
     prazoInscricao: "2026-11-10"
+  },
+  {
+    titulo: "Estágio em Fundos Imobiliários",
+    empresa: "Alianza Investimentos",
+    area: "Fundos Imobiliários",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    emailCandidatura: "creditoestruturado@alianza.com.br",
+    dataPublicacao: "2026-10-26",
+    prazoInscricao: "2026-11-15"
+  },
+  {
+    titulo: "Estágio em DCM",
+    empresa: "Naia Capital",
+    area: "DCM",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://naiacapital.notion.site/3ff87a28f2c6809386eef7d2cfe11583?pvs=105",
+    dataPublicacao: "2026-10-23"
+  },
+  {
+    titulo: "Estágio em Relações com Investidores",
+    empresa: "Bradesco",
+    area: "Relações com Investidores",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: "joice.carmo@bradesco.com.br",
+    assuntoEmail: "Estágio RI Bradesco",
+    dataPublicacao: "2026-10-19"
+  },
+  {
+    titulo: "Estágio em Estratégia & M&A",
+    empresa: "V.tal",
+    area: "Estratégia & M&A",
+    cidade: "São Paulo",
+    tipoEmpresa: "Outro",
+    fonte: "Polifinance",
+    emailCandidatura: "aline.tsuruda@vtal.com",
+    dataPublicacao: "2026-10-19"
+  },
+  {
+    titulo: "Estágio em Investment Banking",
+    empresa: "LUCCE Partners",
+    area: "Investment Banking",
+    cidade: "São Paulo",
+    tipoEmpresa: "Consultoria",
+    fonte: "Polifinance",
+    emailCandidatura: "contato@luccepartners.com",
+    assuntoEmail: "Estágio LUCCE Partners - Nome do Candidato",
+    dataPublicacao: "2026-10-15"
+  },
+  {
+    titulo: "Estágio em Equity Research",
+    empresa: "Neo Investimentos",
+    area: "Equity Research",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://forms.gle/6cH2sceGYDp2ShQ26",
+    dataPublicacao: "2026-10-16",
+    prazoInscricao: "2026-10-28"
+  },
+  {
+    titulo: "Estágio em Macro Research",
+    empresa: "Sarpen Quant Investments",
+    area: "Macro Research",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    emailCandidatura: "vagas@sarpen.com.br",
+    assuntoEmail: "ESTÁGIO MACRO",
+    dataPublicacao: "2026-10-16",
+    prazoInscricao: "2026-11-06"
+  },
+  {
+    titulo: "Estágio em Análise Quantitativa",
+    empresa: "Morgan Stanley",
+    area: "Análise Quantitativa",
+    cidade: "São Paulo",
+    tipoEmpresa: "Banco",
+    fonte: "Polifinance",
+    emailCandidatura: "fidbzstratsinternship@morganstanley.com",
+    dataPublicacao: "2026-10-15"
+  },
+  {
+    titulo: "Estágio em Search Fund",
+    empresa: "Lac Léman Capital",
+    area: "Search Fund",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://www.linkedin.com/company/lacleman-capital/jobs/",
+    emailCandidatura: "joao.maia@lacleman.com.br",
+    dataPublicacao: "2026-10-23",
+    prazoInscricao: "2026-11-01"
+  },
+  {
+    titulo: "Estágio em Investimentos",
+    empresa: "Suno Asset",
+    area: "Investimentos",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    link: "https://gruposunojobs.gupy.io/jobs/12750049?jobBoardSource=share_link",
+    emailCandidatura: "gustavo.mancini@suno.com.br",
+    dataPublicacao: "2026-10-23"
+  },
+  {
+    titulo: "Estágio em Operações",
+    empresa: "Milenio Capital",
+    area: "Operações",
+    cidade: "São Paulo",
+    tipoEmpresa: "Gestora",
+    fonte: "Polifinance",
+    emailCandidatura: "selecao@milenio.capital",
+    assuntoEmail: "Processo Seletivo | Operações",
+    dataPublicacao: "2026-10-23"
   },
 ];
