@@ -5,17 +5,6 @@
 // ============================================================
 const vagasAuto = [
   {
-    titulo: "XP Inc | Summer Job OffShore | 2027",
-    empresa: "XP Inc.",
-    area: "Diversas",
-    cidade: "São Paulo",
-    tipoEmpresa: "Corretora",
-    fonte: "Site da empresa",
-    link: "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8882273002",
-    dataPublicacao: "2026-10-09",
-    origem: "greenhouse:candidaturasdirecionadasxpinc"
-  },
-  {
     titulo: "Estagiario(a) em RPPS Poder Público",
     empresa: "XP Inc.",
     area: "Diversas",
