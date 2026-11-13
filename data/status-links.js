@@ -1,87 +1,87 @@
 // GERADO por scripts/verificar-links.js (cópia de status-links.json para o site conseguir ler). Não edite.
 const statusLinks = {
   "https://gruposunojobs.gupy.io/jobs/12750049?jobBoardSource=share_link": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8051697002": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8680906002": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3698.html": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3701.html": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3702.html": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3712.html": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://naiacapital.notion.site/3ff87a28f2c6809386eef7d2cfe11583?pvs=105": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://rizaasset.com/nossos-talentos#a2gU6000005M3yrIAC": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://vagas.rxzinvest.com.br/aplicar/research-2026": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "falha",
     "motivo": "a página contém \"encerrad\"",
-    "falhasConsecutivas": 11,
-    "ultimaFalhaEm": "2026-11-12"
+    "falhasConsecutivas": 12,
+    "ultimaFalhaEm": "2026-11-13"
   },
   "https://www.ciadeestagios.com.br/vagas/bancoabcbrasil/": {
-    "ultimaChecagem": "2026-11-12",
+    "ultimaChecagem": "2026-11-13",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://www.linkedin.com/jobs/view/4466419671": {
-    "ultimaChecagem": "2026-11-12",
-    "ultimoResultado": "ok",
-    "motivo": "HTTP 200",
-    "falhasConsecutivas": 0,
-    "ultimaFalhaEm": null
+    "ultimaChecagem": "2026-11-13",
+    "ultimoResultado": "falha",
+    "motivo": "a página contém \"nao esta mais disponivel\"",
+    "falhasConsecutivas": 1,
+    "ultimaFalhaEm": "2026-11-13"
   }
 };
