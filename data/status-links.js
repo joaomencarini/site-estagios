@@ -1,63 +1,63 @@
 // GERADO por scripts/verificar-links.js (cópia de status-links.json para o site conseguir ler). Não edite.
 const statusLinks = {
   "https://gruposunojobs.gupy.io/jobs/12750049?jobBoardSource=share_link": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8051697002": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://job-boards.greenhouse.io/candidaturasdirecionadasxpinc/jobs/8680906002": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3698.html": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3701.html": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3702.html": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://mailing-polifinance.github.io/banner3712.html": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://naiacapital.notion.site/3ff87a28f2c6809386eef7d2cfe11583?pvs=105": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
     "ultimaFalhaEm": null
   },
   "https://rizaasset.com/nossos-talentos#a2gU6000005M3yrIAC": {
-    "ultimaChecagem": "2026-11-17",
+    "ultimaChecagem": "2026-11-18",
     "ultimoResultado": "ok",
     "motivo": "HTTP 200",
     "falhasConsecutivas": 0,
